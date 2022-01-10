@@ -615,15 +615,6 @@ print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sit
 vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
 vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
-# variants in vcf3 that have gone from over 3% in v2 to under 3% in v3
-vcf3_withvcf2uniqAF_formatted = vcf3_withvcf2uniqAF
-
-# variants in vcf2 that have gone from over 3% in v2 to under 3% in v3
-vcf2_withvcf2uniqAF_formatted = vcf2_withvcf2uniqAF
-
-# variants in vcf2 that have gone from over 3% in v2 to disappearing in vcf v3
-vcf2_uniqv2droppedinv3_formatted = vcf2_uniqv2droppedinv3
-
 # save common snps
 vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 ```
@@ -633,9 +624,9 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
-vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF_formatted
-vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF_formatted
-vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3_formatted
+vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
+vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
+vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
 
 cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
 vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
@@ -1061,12 +1052,11 @@ vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#',
                     names=cols, compression='infer')
 vcf3_df = reformat_vcf(vcf3_df, 3)
 
-# filter the vcf3 for sites in vcf2_AF_uniq
+# filter the vcf3 for sites in vcf2_AF_uniq but called at lower AF
 vcf3_withvcf2uniqAF = vcf3_df.loc[vcf3_df['site_ref'].isin(vcf2_AF_uniq.site_ref)]
-vcf3_withvcf2uniqAF
-# there  variants carried over vcf3 with lower AF but there is 17 variants not called in sentieon v3. These are:
-lowvcf2uniqAF_droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
-lowvcf2uniqAF_droppedinv3
+
+# filter for vcf2 not called in sentieon 3 at all
+vcf2_uniqv2droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
 ```
 
 ```{r}
@@ -1075,9 +1065,9 @@ print(c("Number of variants that dropped below 3% AF in sentieon v3:   ", nrow(v
 vcf3_withvcf2uniqAF
 
 
-lowvcf2uniqAF_droppedinv3 <- py$lowvcf2uniqAF_droppedinv3
-print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(lowvcf2uniqAF_droppedinv3)))
-lowvcf2uniqAF_droppedinv3
+vcf2_uniqv2droppedinv3 <- py$vcf2_uniqv2droppedinv3
+print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(vcf2_uniqv2droppedinv3)))
+vcf2_uniqv2droppedinv3
 ```
 
 Of the 112 variants, 57 are in sentieon v3 vcf but have AF lower than 3%. The other 55 variants are not called at all by sentieon v3.
@@ -1105,15 +1095,15 @@ vcf2_df = pd.read_csv( vcf2, sep="\t", comment='#',
 vcf2_df = reformat_vcf(vcf2_df, 2)
 
 
-# filter the vcf2 for sites in vcf2_AF_uniq
+# filter the vcf2 for sites unique to > 3% vcf v3 but called < 3% vcf v2
 vcf2_withvcf3uniqAF = vcf2_df.loc[vcf2_df['site_ref'].isin(vcf3_AF_uniq.site_ref)]
 print("Uniq sites in vcf sentieon v2 in sentieon v3 but at low AF")
 vcf2_withvcf3uniqAF  
 
-# get unique sites not called
-lowvcf2uniqAF_droppedinv3 = vcf3_AF_uniq.loc[~vcf3_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
+# get unique sites not called in sentieon 2 under 3%
+vcf3_uniqv3droppedinv2 = vcf3_AF_uniq.loc[~vcf3_AF_uniq['site_ref'].isin(vcf2_withvcf3uniqAF)]
 print("Uniq sites in vcf sentieon v3 not called in sentieon v2")
-lowvcf2uniqAF_droppedinv3
+vcf3_uniqv3droppedinv2
 ```
 
 The 4 variants unique to sentieon v3 vcf has been previously called in v2 but had very low AF but in sentieon v3 vcf3 these have higher AF. Interestingly, variant chr11:32430455  ref is 13bp in v2 and 25 bp in v3 but is not retained in v2 as the region does not overlap with the myeloid probe bed file. 
@@ -1351,16 +1341,6 @@ print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sit
 vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
 vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
-# variants in vcf3 that have gone from over 3% in v2 to under 3% in v3
-vcf3_withvcf2uniqAF_formatted = vcf3_withvcf2uniqAF
-
-# variants in vcf2 that have gone from over 3% in v2 to under 3% in v3
-vcf2_withvcf2uniqAF_formatted = vcf2_withvcf2uniqAF
-
-# variants in vcf2 that have gone from over 3% in v2 to disappearing in vcf v3
-lowvcf2uniqAF_droppedinv3_formatted = lowvcf2uniqAF_droppedinv3
-
-
 # save common snps
 vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 ```
@@ -1370,10 +1350,9 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
-vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF_formatted
-vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF_formatted
-lowvcf2uniqAF_droppedinv3_formatted <- py$lowvcf2uniqAF_droppedinv3_formatted
-
+vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
+vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
+vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
 
 cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
 vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
@@ -1385,8 +1364,8 @@ cols.num <- c("AF_v3", "AF_byreads_v3" )
 vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
 cols.num <- c("AF_v2", "AF_byreads_v2" )
 vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3" )
-lowvcf2uniqAF_droppedinv3_formatted[cols.num] <- sapply(lowvcf2uniqAF_droppedinv3_formatted[cols.num],as.numeric)
+cols.num <- c("AF_v2", "AF_byreads_v2" )
+vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
 
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
 ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
@@ -1401,7 +1380,7 @@ grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v
 ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_point() +
     geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=lowvcf2uniqAF_droppedinv3_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="red") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) + 
@@ -1410,7 +1389,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
 ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_point() +
     geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=lowvcf2uniqAF_droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
     geom_smooth() +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
@@ -1579,11 +1558,24 @@ joined_df
 
 We will check sample TMv2OCT20-HD734-1st_S35_L001
 
+```{bash}
+
+# bcftools='/home/aisha/Softwares/bin/bcftools'
+# cd ..
+
+#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf -o  vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf 
+
+# version 2 has column incompatible for left align when normalising multi allelic variants
+# scp vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_copy.vcf
+# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf
+
+```
+
 ## Read depth of shared sites
 
 ```{python}
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -1606,7 +1598,7 @@ vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
 vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
 # save common snps
-vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_red')
+vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 ```
 
 
@@ -1661,11 +1653,12 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
 
 
 ## Distribution of AF of unique variants across chromosome
+
 ```{python}
 import pandas as pd
 
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -1716,17 +1709,17 @@ cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 
 #bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf > vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf
 
+```
 
+```{bash, engine.opts='-l'}
+#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted_goodAF.vcf
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted_goodAF.vcf
 ```
 
 ```{python}
-import pandas as pd
-import os
-cwd = os.getcwd()
-print(cwd)
-
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted_goodAF.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted_goodAF.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -1785,7 +1778,7 @@ There are 122 variants that are have AF greater than 3% but do not appear in sen
 vcf2_AF_uniq = vcf2_df_uniq
 
 # read in vcf3 all
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
                     names=cols, compression='infer')
@@ -1794,9 +1787,10 @@ vcf3_df = reformat_vcf(vcf3_df, 3)
 
 # filter the vcf3 for sites in vcf2_AF_uniq
 vcf3_withvcf2uniqAF = vcf3_df.loc[vcf3_df['site_ref'].isin(vcf2_AF_uniq.site_ref)]
+vcf2_withvcf2uniqAF = vcf2_AF_uniq.loc[vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
 
-# theese are the variants carried over vcf3 with lower AF
-lowvcf2uniqAF_droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
+# these are the vcf v2 variants seen in vcf v3 with lower AF
+vcf2_uniqv2droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
 ```
 
 ```{r}
@@ -1805,9 +1799,9 @@ print(c("Number of variants that dropped below 3% AF in sentieon v3:   ", nrow(v
 vcf3_withvcf2uniqAF
 
 
-lowvcf2uniqAF_droppedinv3 <- py$lowvcf2uniqAF_droppedinv3
-print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(lowvcf2uniqAF_droppedinv3)))
-lowvcf2uniqAF_droppedinv3
+vcf2_uniqv2droppedinv3 <- py$vcf2_uniqv2droppedinv3
+print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(vcf2_uniqv2droppedinv3)))
+vcf2_uniqv2droppedinv3
 ```
 
 Of the 112 variants, 90 are in sentieon v3 vcf but have AF lower than 3%. The other 32 variants are not called at all by sentieon v3.
@@ -2009,10 +2003,8 @@ ggscatter(HD734_var, x = "vcf2_AF", y = "vcf3_AF",
 ```
 
 ```{python}
-import pandas as pd
-
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -2027,21 +2019,10 @@ vcf3_df = reformat_vcf(vcf3_df, 3)
 
 
 common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
-print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites))) # 196,147
+print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites)))
 
 vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
 vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
-
-# variants in vcf3 that have gone from over 3% in v2 to under 3% in v3
-vcf3_withvcf2uniqAF_formatted = vcf3_withvcf2uniqAF
-
-
-# variants in vcf2 that have gone from over 3% in v2 to under 3% in v3
-vcf2_withvcf2uniqAF_formatted = vcf2_withvcf2uniqAF
-
-
-# variants in vcf2 that have gone from over 3% in v2 to disappearing in vcf v3
-lowvcf2uniqAF_droppedinv3_formatted = lowvcf2uniqAF_droppedinv3
 
 # save common snps
 vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
@@ -2049,17 +2030,13 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 
 
 ```{r}
-library(ggplot2)
-library("ggpubr")
-library(grid)
-library(gridExtra)
 
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
-vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF_formatted
-vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF_formatted
-lowvcf2uniqAF_droppedinv3_formatted <- py$lowvcf2uniqAF_droppedinv3_formatted
+vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
+vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
+vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
 
 cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
 vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
@@ -2072,7 +2049,7 @@ vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[
 cols.num <- c("AF_v2", "AF_byreads_v2" )
 vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
 cols.num <- c("AF_v2", "AF_byreads_v2" )
-lowvcf2uniqAF_droppedinv3_formatted[cols.num] <- sapply(lowvcf2uniqAF_droppedinv3_formatted[cols.num],as.numeric)
+vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
 
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
 ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
@@ -2087,7 +2064,7 @@ grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v
 ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_point() +
     geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=lowvcf2uniqAF_droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) + 
@@ -2096,7 +2073,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
 ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_point() +
     geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=lowvcf2uniqAF_droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
     geom_smooth() +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
@@ -2331,16 +2308,23 @@ ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
 
 We will check sample  TMv2OCT20-HD829-1st_S33_L001
 
+```{bash}
+
+# bcftools='/home/aisha/Softwares/bin/bcftools'
+# cd ..
+
+#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf -o  vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf 
+
+# version 2 has column incompatible for left align when normalising multi allelic variants
+# scp vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_copy.vcf
+# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf
+
+```
 ## Read depth of shared sites
 
 ```{python}
-import pandas as pd
-import os
-cwd = os.getcwd()
-print(cwd)
-
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -2385,7 +2369,6 @@ plt.show()
 
 ```{r }
 vcfsmerged = py$vcfs_merged
-#nrow(vcfsmerged)
 
 print(paste("Number of duplicate read depths on shared sites", nrow(vcfsmerged[duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #191117
 print(paste("Number of different read depths on shared sites", nrow(vcfsmerged[!duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #5030
@@ -2419,8 +2402,8 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
 
 ## Distribution of AF of unique variants across chromosome
 ```{python}
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -2464,21 +2447,30 @@ plot(density(dat$AF), main = "Unique v3 variants AF oncospan")
 
 
 ```{bash}
-bcftools='/home/aisha/Softwares/bin/bcftools'
-cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
+#bcftools='/home/aisha/Softwares/bin/bcftools'
+#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 
-bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf > vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf > vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf
 
-bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf > vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf > vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf
+
+
+```
+
+```{bash}
+#bcftools='/home/aisha/Softwares/bin/bcftools'
+#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
+
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted_goodAF.vcf
+
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted_goodAF.vcf
 
 
 ```
 
 ```{python}
-
-
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted_goodAF.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted_goodAF.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -2537,17 +2529,19 @@ There are 122 variants that are have AF greater than 3% but do not appear in sen
 vcf2_AF_uniq = vcf2_df_uniq
 
 # read in vcf3 all
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
-vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
+vcf3_df = pd.read_csv(vcf3, sep="\t", comment='#', 
                     names=cols, compression='infer')
+                    
 vcf3_df = reformat_vcf(vcf3_df, 3)
 
 # filter the vcf3 for sites in vcf2_AF_uniq
 vcf3_withvcf2uniqAF = vcf3_df.loc[vcf3_df['site_ref'].isin(vcf2_AF_uniq.site_ref)]
+vcf2_withvcf2uniqAF = vcf2_AF_uniq.loc[vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
 
-# there 25 variants carried over vcf3 with lower AF but there is 17 variants not called in sentieon v3. These are:
-lowvcf2uniqAF_droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
+# vcf v2 variants not carried over vcf3 with lower AF
+vcf2_uniqv2droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
 ```
 
 ```{r}
@@ -2556,9 +2550,9 @@ print(c("Number of variants that dropped below 3% AF in sentieon v3:   ", nrow(v
 vcf3_withvcf2uniqAF
 
 
-lowvcf2uniqAF_droppedinv3 <- py$lowvcf2uniqAF_droppedinv3
-print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(lowvcf2uniqAF_droppedinv3)))
-lowvcf2uniqAF_droppedinv3
+vcf2_uniqv2droppedinv3 <- py$vcf2_uniqv2droppedinv3
+print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(vcf2_uniqv2droppedinv3)))
+vcf2_uniqv2droppedinv3
 ```
 
 Of the 112 variants, 90 are in sentieon v3 vcf but have AF lower than 3%. The other 32 variants are not called at all by sentieon v3.
