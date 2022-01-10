@@ -83,6 +83,7 @@ def common_elements(list1, list2):
 ## Filter samples
 
 ```{bash}
+cd /home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/vcf_validation
 # filter v2 vcfs
 
 #cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0
@@ -173,7 +174,7 @@ We will check two samples TMv2OCT20-oncospan-cell-line-1st_S39_L001 and TMv2OCT2
 ## Read depth of shared sites
 
 ```{r , echo=FALSE}
-setwd("~/Documents/Projects/myeloid/1.9.0/sentieon")
+setwd("~/Documents/Projects/myeloid/1.9.0/sentieon/vcf_validation/")
 getwd()
 ```
 
@@ -449,8 +450,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-oncospan-1st.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-oncospan-1st.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-oncospan-1st.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-oncospan-1st.col.png")
 ```
 
 ## Types of variants on each chromosome
@@ -473,8 +474,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-oncospan-1st.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-oncospan-1st.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-oncospan-1st.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-oncospan-1st.col.png")
 ```
 
 The expected AF of variants is extracted from sheet 1 of the xlsx table
@@ -1170,8 +1171,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-oncospan-2nd.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-oncospan-2nd.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-oncospan-2nd.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-oncospan-2nd.col.png")
 ```
 
 ## Types of variants on each chromosome
@@ -1194,8 +1195,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-oncospan-2nd.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-oncospan-2nd.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-oncospan-2nd.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-oncospan-2nd.col.png")
 ```
 
 The expected AF of variants is extracted from sheet 1 of the xlsx table
@@ -1818,10 +1819,10 @@ We are comparing all vcf sites, rather than filtered for myeloid panel regions.
 bcftools='/home/aisha/Softwares/bin/bcftools'
 cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 echo "Oncospan sample sentieon v2.1.0"
-bcftools stats vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 
 echo "Oncospan sample sentieon v3.2.0"
-bcftools stats vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 ```
 
 The ti/tv ratio (or ts/tv ratio) increased from 2.45 to 2.29 with the new update.
@@ -1840,19 +1841,19 @@ tabix -p vcf vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz
 tabix -p vcf vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz
 
 echo "Sentieon HD734 v2.1.0"
-bcftools stats vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 echo "Sentieon HD734 v3.2.0"
-bcftools stats vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 gunzip vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz
 gunzip vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf.gz
 
 echo "VAF >3% HD734 v2.1.0"
-bcftools stats vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf | grep ^"SN" 
+$bcftools stats vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf | grep ^"SN" 
 
 echo "VAF >3% HD734 v3.2.0"
-bcftools stats vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf | grep ^"SN" 
+$bcftools stats vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf | grep ^"SN" 
 
 
 ```
@@ -1877,8 +1878,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filtered
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-hd734.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-hd734.col.png")
 ```
 
 ## Types of variants on each chromosome
@@ -1901,8 +1902,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filtered
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-hd734.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-hd734.col.png")
 ```
 
 The expected AF of variants is extracted from sheet 1 of the xlsx table
@@ -2569,10 +2570,10 @@ We are comparing all vcf sites, rather than filtered for myeloid panel regions.
 bcftools='/home/aisha/Softwares/bin/bcftools'
 cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 echo "Oncospan sample sentieon v2.1.0"
-bcftools stats vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 
 echo "Oncospan sample sentieon v3.2.0"
-bcftools stats vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 ```
 
 The ti/tv ratio (or ts/tv ratio) increased from 2.45 to 2.28 with the new update.
@@ -2591,20 +2592,20 @@ tabix -p vcf vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz
 tabix -p vcf vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz
 
 echo "Sentieon HD829 v2.1.0"
-bcftools stats vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 echo "Sentieon HD829 v3.2.0"
-bcftools stats vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 gunzip vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz
 gunzip vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf.gz
 
 
 echo "VAF >3% HD829 v2.1.0"
-bcftools stats vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf | grep ^"SN" 
+$bcftools stats vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf | grep ^"SN" 
 
 echo "VAF >3% HD829 v3.2.0"
-bcftools stats vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf| grep ^"SN" 
+$bcftools stats vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf| grep ^"SN" 
 
 
 ```
@@ -2629,8 +2630,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filtered
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-hd734.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-hd734.col.png")
 ```
 
 ## Types of variants on each chromosome
@@ -2653,8 +2654,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filtered
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-hd734.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-hd734.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-hd734.col.png")
 ```
 
 The expected AF of variants is extracted from sheet 1 of the xlsx table
@@ -3114,12 +3115,13 @@ The Ti/Tv ratio is the ratio of the number of transitions (A-G/C-T) to the numbe
 We are comparing all vcf sites, rather than filtered for myeloid panel regions.
 
 ```{bash}
+bcftools='/home/aisha/Softwares/bin/bcftools'
 cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 echo "Oncospan sample sentieon v2.1.0"
-bcftools stats vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 
 echo "Oncospan sample sentieon v3.2.0"
-bcftools stats vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 ```
 
 The ti/tv ratio (or ts/tv ratio) increased from 2.49 to 2.36 with the new update.
@@ -3128,7 +3130,7 @@ The ti/tv ratio (or ts/tv ratio) increased from 2.49 to 2.36 with the new update
 ## Singleton stats
 
 ```{bash, message=FALSE}
-
+bcftools='/home/aisha/Softwares/bin/bcftools'
 cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 
 bgzip vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf
@@ -3138,19 +3140,19 @@ tabix -p vcf vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo
 tabix -p vcf vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf.gz
 
 echo "Sentieon HD829 v2.1.0"
-bcftools stats vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 echo "Sentieon HD829 v3.2.0"
-bcftools stats vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 gunzip vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf.gz
 gunzip vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf.gz
 
 echo "VAF >3% v2.1.0"
-bcftools stats vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
+$bcftools stats vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
 
 echo "VAF >3% v3.2.0"
-bcftools stats vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
+$bcftools stats vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
 
 ```
 
@@ -3174,8 +3176,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-2109024.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-2109024.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-2109024.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-2109024.col.png")
 ```
 
 ## Types of variants on each chromosome
@@ -3198,8 +3200,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-2109024.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-2109024.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-2109024.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-2109024.col.png")
 ```
 
 
@@ -3212,11 +3214,6 @@ knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-c
 ## Read depth of shared sites
 
 ```{python}
-import pandas as pd
-import os
-cwd = os.getcwd()
-print(cwd)
-
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
 vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
@@ -3337,8 +3334,6 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
 
 ## Distribution of AF of unique variants across chromosome
 ```{python}
-import pandas as pd
-
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
 vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
@@ -3537,12 +3532,13 @@ The Ti/Tv ratio is the ratio of the number of transitions (A-G/C-T) to the numbe
 We are comparing all vcf sites, rather than filtered for myeloid panel regions.
 
 ```{bash}
+bcftools='/home/aisha/Softwares/bin/bcftools'
 cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 echo "Oncospan sample sentieon v2.1.0"
-bcftools stats vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 
 echo "Oncospan sample sentieon v3.2.0"
-bcftools stats vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
+$bcftools stats vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz | grep "TSTV"
 ```
 
 The ti/tv ratio (or ts/tv ratio) increased from 2.49 to 2.37 with the new update.
@@ -3551,7 +3547,7 @@ The ti/tv ratio (or ts/tv ratio) increased from 2.49 to 2.37 with the new update
 ## Singleton stats
 
 ```{bash, message=FALSE}
-
+bcftools='/home/aisha/Softwares/bin/bcftools'
 cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 
 bgzip vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf
@@ -3561,19 +3557,19 @@ tabix -p vcf vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmye
 tabix -p vcf vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf.gz
 
 echo "Sentieon HD829 v2.1.0"
-bcftools stats vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 echo "Sentieon HD829 v3.2.0"
-bcftools stats vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf.gz | grep ^"SN" 
+$bcftools stats vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf.gz | grep ^"SN" 
 
 gunzip vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf.gz
 gunzip vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf.gz
 
 echo "VAF >3% v2.1.0"
-bcftools stats vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
+$bcftools stats vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
 
 echo "VAF >3% v3.2.0"
-bcftools stats vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
+$bcftools stats vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf | grep ^"SN"
 
 ```
 
@@ -3597,8 +3593,8 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-2109242.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-2109242.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/number-of-substitutions-of-snps-v2-2109242.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/number-of-substitutions-of-snps-v3-2109242.col.png")
 ```
 
 ## Types of variants on each chromosome
@@ -3617,12 +3613,14 @@ vcfstats --vcf novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_
 	--title 'Types of variants on each chromosome v3 2109242' \
 	--config bed_files/config.toml
 	
+cd /home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/vcf_validation
+	
 ```
 
 
 ```{r, echo=FALSE,  out.width="50%", fig.align="default"}
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-2109242.col.png")
-knitr::include_graphics("novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-2109242.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_2.1.0/types-of-variants-on-each-chromosome-v2-2109242.col.png")
+knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-2109242.col.png")
 ```
 
 
