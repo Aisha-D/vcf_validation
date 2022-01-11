@@ -50,9 +50,6 @@ def reformat_vcf(vcf_df, version):
   # clean vcf to have columns: Site, DP, MAF, MAF %, RAW, RAW %
   vcf_df['site'] = vcf_df['CHROM'].astype(str) + ':' + vcf_df['POS'].astype(str)
   vcf_df['site_ref'] = vcf_df['site'].astype(str) + ':' + vcf_df['REF'].astype(str)  + '-' + vcf_df['ALT'].astype(str)
-  vcf_df['DP'] = vcf_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
-  vcf_df['DP'] = vcf_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-  vcf_df['DP'] = vcf_df['DP'].astype(int)
   vcf_df['AF'] = vcf_df['SAMPLE'].str.split(':', expand=True)[2]
   vcf_df['AF_v'] = vcf_df['AF'].astype(float) * 100
   
@@ -64,11 +61,17 @@ def reformat_vcf(vcf_df, version):
   vcf_df['AF_byreads'] = round(vcf_df['AF_byreads'], 3)
   vcf_df['AF_byreads_v'] =vcf_df['AF_byreads'].astype(float) * 100
   
+  # The labels for versions need to be different so we know where they are from if they are merged
+  # The DP is also different, v2 DP from INFO is the same as DP from sample in v3
   if version == 2:
+    vcf_df['DP'] = vcf_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
+    vcf_df['DP'] = vcf_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
+    vcf_df['DP'] = vcf_df['DP'].astype(int)
     vcf_df = vcf_df.rename({'AF_v': 'AF_v2', 'AF_byreads_v': 'AF_byreads_v2', 'DP': 'DP_v2'}, axis = 1)
   elif version == 3:
+    vcf_df['DP'] = vcf_df['SAMPLE'].str.split(':', expand=True)[3]
+    vcf_df['DP'] = vcf_df['DP'].astype(int)
     vcf_df = vcf_df.rename({'AF_v': 'AF_v3', 'AF_byreads_v': 'AF_byreads_v3', 'DP': 'DP_v3'}, axis = 1)
-    vcf_df['DP_FORMAT'] = vcf_df['SAMPLE'].str.split(':', expand=True)[3]
 
   return vcf_df
 
@@ -77,6 +80,34 @@ def reformat_vcf(vcf_df, version):
 # Filter common sites between two vcfs
 def common_elements(list1, list2):
     return list(set(list1) & set(list2))
+
+```
+
+
+```{r}
+# functions for ggplots!!
+point_graph <- function(dat, x, y, title, x_label, y_label) {
+  grob1 <- grobTree(textGrob(paste("Pearson Corr: ", round(cor(dat[, x], dat[, y]), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+  plot <-  ggplot(dat, aes(x = dat[, x], y =  dat[, y])) +
+        geom_point() +
+        geom_smooth() +
+        geom_abline() +
+        annotation_custom(grob1) +
+        labs(title = title, x = x_label, y = y_label)
+  return(plot)
+}
+
+zoom_point_graph <- function(dat, x, y, title, x_label, y_label, zoom_percent) {
+  dat <- dat[which(dat[,x] <= zoom_percent),]
+  grob1 <- grobTree(textGrob(paste("Pearson Corr: ", round(cor(dat[, x], dat[, y]), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+  plot <-  ggplot(dat, aes(x = dat[, x], y =  dat[, y])) +
+        geom_point() +
+        geom_smooth() +
+        geom_abline() +
+        annotation_custom(grob1) +
+        labs(title = title, x = x_label, y = y_label)
+  return(plot)
+}
 
 ```
 
@@ -236,23 +267,11 @@ vcfsmerged <- py$vcfs_merged
 print(paste("Number of duplicate read depths on shared sites", nrow(vcfsmerged[duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #191117
 print(paste("Number of different read depths on shared sites", nrow(vcfsmerged[!duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #5030
 
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$DP_v2, vcfsmerged$DP_v3), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
-    geom_point(aes(color=variant_type)) +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-    labs(title = "Oncospan_1st_S39_L001")
 
-vcfsmerged$AF_x <- as.numeric(vcfsmerged$AF_x)
-vcfsmerged$AF_y <- as.numeric(vcfsmerged$AF_y)
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_x, vcfsmerged$AF_y,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
-    geom_point(aes(color=variant_type)) +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-   labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF", title = "Oncospan_1st_S39_L001")
+point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = "Oncospan_1st", x_label =  "Sentieon 2.1.0 DP", y_label = "Sentieon 3.2.0 DP")
+
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = "Oncospan_1st", x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF")
+  
 ```
 
 
@@ -607,7 +626,6 @@ vcf3_df = reformat_vcf(vcf3_df, 3)
 common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
 print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites))) # 196,147
 
-
 vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
 vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
@@ -617,6 +635,7 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 
 
 ```{r}
+sample_name = "Oncospan_1st"
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
@@ -624,112 +643,48 @@ vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
 vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
 vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
 
-cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
-vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2")
-vcf2_df[cols.num] <- sapply(vcf2_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3")
-vcf3_df[cols.num] <- sapply(vcf3_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3" )
-vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
+## mutect2 AF v2.1.0 vs v3.2.0
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF")
 
+## mutect2 AF v2.1.0 vs v3.2.0 with low vaf v3 not called in v2 highlighted red
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF") +
+  geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red")
+  
+## mutect2 AF vs raw AF vcf v2 0 - 100%
+point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title = paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red")
 
-vcfmerged_lowvafinv3 <- vcfsmerged[which(vcfsmerged$site_ref %in% vcf3_withvcf2uniqAF_formatted$site_ref), ]
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-   labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "Oncospan_1st")
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title =paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black")
 
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "Oncospan_1st")
+## mutect2 AF vs raw AF vcf v3 0 - 100%
+point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name, " Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") 
 
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name," Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
+  
 
-## mutect2 AF vs raw AF vcf v2
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_1st")
+## raw AF vcf v2 vs raw AF vcf v3 0 - 100%
+point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name, x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF")
 
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_1st") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name,  x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF", zoom_percent= 30) +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
 
-
-## mutect2 AF vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf3_df$AF_byreads_v3, vcf3_df$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_1st")
-
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-      geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
-    geom_smooth() +
-    geom_abline() + 
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_1st") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
-
-
-## raw AF vcf v2 vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_byreads_v2, vcfsmerged$AF_byreads_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "Oncospan_1st")
-
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3" , title = "Oncospan_1st") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
-
-
-## Plot the DPs of the 
-vcfsmerged$DP_v2<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v2)))
-vcfsmerged$DP_v3<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v3)))
-
-ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "Oncospan_1st") 
+## Plot the DPs of the vcfs
+## red is variants highly called > 3% AF but decreased below 3% AF
+point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =  "Sentieon 2.1.0 DP", y_label = "Sentieon 3.2.0 DP") ++
+   geom_point(data=vcfsmerged[which(vcfsmerged$site_ref %in% vcf2_withvcf2uniqAF_formatted$site_ref),], aes(x =DP_v2, y = DP_v3), color = "red") 
 ```
 
 
@@ -1344,6 +1299,7 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 
 
 ```{r}
+sample_name = "Oncospan_1st"
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
@@ -1351,101 +1307,48 @@ vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
 vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
 vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
 
-cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
-vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2")
-vcf2_df[cols.num] <- sapply(vcf2_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3")
-vcf3_df[cols.num] <- sapply(vcf3_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3" )
-vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
+## mutect2 AF v2.1.0 vs v3.2.0
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF")
 
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "Oncospan_2nd")
+## mutect2 AF v2.1.0 vs v3.2.0 with low vaf v3 not called in v2 highlighted red
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF") +
+  geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red")
+  
+## mutect2 AF vs raw AF vcf v2 0 - 100%
+point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title = paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red")
 
-## mutect2 AF vs raw AF vcf v2
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_2nd")
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title =paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black")
 
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_2nd") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v3 0 - 100%
+point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name, " Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") 
 
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name," Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
+  
 
-## mutect2 AF vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf3_df$AF_byreads_v3, vcf3_df$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_2nd")
+## raw AF vcf v2 vs raw AF vcf v3 0 - 100%
+point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name, x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF")
 
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-      geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
-    geom_smooth() +
-    geom_abline() + 
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_2nd")+
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name,  x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF", zoom_percent= 30) +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
 
-
-## raw AF vcf v2 vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_byreads_v2, vcfsmerged$AF_byreads_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "Oncospan_2nd")
-
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "Oncospan_2nd") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
-
-
-## Plot the DPs of the 
-vcfsmerged$DP_v2<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v2)))
-vcfsmerged$DP_v3<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v3)))
-
-ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "Oncospan_2nd") 
+## Plot the DPs of the vcfs
+## red is variants highly called > 3% AF but decreased below 3% AF
+point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =  "Sentieon 2.1.0 DP", y_label = "Sentieon 3.2.0 DP") ++
+   geom_point(data=vcfsmerged[which(vcfsmerged$site_ref %in% vcf2_withvcf2uniqAF_formatted$site_ref),], aes(x =DP_v2, y = DP_v3), color = "red") 
 ```
 
 
@@ -2029,7 +1932,7 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 
 
 ```{r}
-
+sample_name = "Oncospan_1st"
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
@@ -2037,102 +1940,50 @@ vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
 vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
 vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
 
-cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
-vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2")
-vcf2_df[cols.num] <- sapply(vcf2_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3")
-vcf3_df[cols.num] <- sapply(vcf3_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3" )
-vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
+## mutect2 AF v2.1.0 vs v3.2.0
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF")
 
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "HD734")
+## mutect2 AF v2.1.0 vs v3.2.0 with low vaf v3 not called in v2 highlighted red
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF") +
+  geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red")
+  
+## mutect2 AF vs raw AF vcf v2 0 - 100%
+point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title = paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red")
 
-## mutect2 AF vs raw AF vcf v2
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 HD734")
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title =paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black")
 
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 HD734") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v3 0 - 100%
+point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name, " Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") 
 
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name," Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
+  
 
-## mutect2 AF vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf3_df$AF_byreads_v3, vcf3_df$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 HD734")
+## raw AF vcf v2 vs raw AF vcf v3 0 - 100%
+point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name, x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF")
 
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-      geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
-    geom_smooth() +
-    geom_abline() + 
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 HD734")+
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name,  x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF", zoom_percent= 30) +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
 
-
-## raw AF vcf v2 vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_byreads_v2, vcfsmerged$AF_byreads_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "HD734")
-
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "HD734") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
-
-
-## Plot the DPs of the 
-vcfsmerged$DP_v2<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v2)))
-vcfsmerged$DP_v3<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v3)))
-
-ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "HD734") 
+## Plot the DPs of the vcfs
+## red is variants highly called > 3% AF but decreased below 3% AF
+point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =  "Sentieon 2.1.0 DP", y_label = "Sentieon 3.2.0 DP") ++
+   geom_point(data=vcfsmerged[which(vcfsmerged$site_ref %in% vcf2_withvcf2uniqAF_formatted$site_ref),], aes(x =DP_v2, y = DP_v3), color = "red") 
 ```
+
 
 ```{python}
 # # need to add the RAW AF to the vcfs with expected AF
@@ -3156,113 +3007,57 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 
 
 ```{r}
+sample_name = "Oncospan_1st"
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
 vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
 vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
 vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
-cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
-vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2")
-vcf2_df[cols.num] <- sapply(vcf2_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3")
-vcf3_df[cols.num] <- sapply(vcf3_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3" )
-vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
-vcfmerged_lowvafinv3 <- vcfsmerged[which(vcfsmerged$site_ref %in% vcf3_withvcf2uniqAF_formatted$site_ref), ]
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109024-21286Z0006")
 
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109024-21286Z0006")
+## mutect2 AF v2.1.0 vs v3.2.0
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF")
 
-## mutect2 AF vs raw AF vcf v2
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109024-21286Z0006")
+## mutect2 AF v2.1.0 vs v3.2.0 with low vaf v3 not called in v2 highlighted red
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF") +
+  geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red")
+  
+## mutect2 AF vs raw AF vcf v2 0 - 100%
+point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title = paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red")
 
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109024-21286Z0006") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title =paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black")
 
-## mutect2 AF vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf3_df$AF_byreads_v3, vcf3_df$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109024-21286Z0006")
+## mutect2 AF vs raw AF vcf v3 0 - 100%
+point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name, " Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") 
 
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-      geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
-    geom_smooth() +
-    geom_abline() + 
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109024-21286Z0006")+
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name," Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
+  
 
-## raw AF vcf v2 vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_byreads_v2, vcfsmerged$AF_byreads_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3 2109024-21286Z0006")
+## raw AF vcf v2 vs raw AF vcf v3 0 - 100%
+point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name, x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF")
 
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3 2109024-21286Z0006") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name,  x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF", zoom_percent= 30) +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
 
-## Plot the DPs of the 
-vcfsmerged$DP_v2<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v2)))
-vcfsmerged$DP_v3<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v3)))
-ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "2109024-21286Z0006") 
+## Plot the DPs of the vcfs
+## red is variants highly called > 3% AF but decreased below 3% AF
+point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =  "Sentieon 2.1.0 DP", y_label = "Sentieon 3.2.0 DP") ++
+   geom_point(data=vcfsmerged[which(vcfsmerged$site_ref %in% vcf2_withvcf2uniqAF_formatted$site_ref),], aes(x =DP_v2, y = DP_v3), color = "red") 
 ```
-
 
 
 
@@ -3620,110 +3415,56 @@ vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 
 
 ```{r}
+sample_name = "Oncospan_1st"
 vcfsmerged <- py$vcfs_merged
 vcf2_df <- py$vcf2_df
 vcf3_df <- py$vcf3_df
 vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
 vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
 vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
-cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
-vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2")
-vcf2_df[cols.num] <- sapply(vcf2_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3")
-vcf3_df[cols.num] <- sapply(vcf3_df[cols.num],as.numeric)
-cols.num <- c("AF_v3", "AF_byreads_v3" )
-vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
-cols.num <- c("AF_v2", "AF_byreads_v2" )
-vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
-vcfmerged_lowvafinv3 <- vcfsmerged[which(vcfsmerged$site_ref %in% vcf3_withvcf2uniqAF_formatted$site_ref), ]
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109242-21286Z0006")
 
-ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
-    geom_point() +
-    geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109242-21286Z0006")
-## mutect2 AF vs raw AF vcf v2
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109242-21286Z0006")
+## mutect2 AF v2.1.0 vs v3.2.0
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF")
 
-ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
-    geom_point() +
-    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
-    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109242-21286Z0006") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF v2.1.0 vs v3.2.0 with low vaf v3 not called in v2 highlighted red
+point_graph(vcfsmerged, x = "AF_v2", y = "AF_v3", title = sample_name, x_label =  "Sentieon 2.1.0 AF", y_label = "Sentieon 3.2.0 AF") +
+  geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red")
+  
+## mutect2 AF vs raw AF vcf v2 0 - 100%
+point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title = paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red")
 
-## mutect2 AF vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf3_df$AF_byreads_v3, vcf3_df$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109242-21286Z0006")
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf2_df, x = "AF_byreads_v2", y = "AF_v2", title =paste0(sample_name, " Sentieon v2.1.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+  geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black")
 
-ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
-    geom_point() +
-      geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
-    geom_smooth() +
-    geom_abline() + 
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109242-21286Z0006")+
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## mutect2 AF vs raw AF vcf v3 0 - 100%
+point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name, " Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF") +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") 
 
-## raw AF vcf v2 vs raw AF vcf v3
-grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_byreads_v2, vcfsmerged$AF_byreads_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "2109242-21286Z0006")
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcf3_df, x = "AF_byreads_v3", y = "AF_v3", title = paste0(sample_name," Sentieon v3.2.0"), x_label =  "Raw AF", y_label = "Mutect2 AF", zoom_percent= 30) +
+  geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
+  
 
-ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    geom_hline(yintercept=3, linetype="dashed", color = "black") +
-    geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "2109242-21286Z0006") +
-    scale_x_continuous(limits = c(0, 25))+
-    scale_y_continuous(limits = c(0, 25))
+## raw AF vcf v2 vs raw AF vcf v3 0 - 100%
+point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name, x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF")
 
-## Plot the DPs of the 
-vcfsmerged$DP_v2<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v2)))
-vcfsmerged$DP_v3<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v3)))
-ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
-    geom_point() +
-    geom_smooth() +
-    geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "2109242-21286Z0006") 
+## mutect2 AF vs raw AF vcf v2 0 - 30%
+zoom_point_graph(vcfsmerged, x = "AF_byreads_v2", y = "AF_byreads_v3", title = sample_name,  x_label =  "Sentieon 2.1.0 RAW AF", y_label = "Sentieon 3.2.0 RAW AF", zoom_percent= 30) +
+  geom_hline(yintercept=3, linetype="dashed", color = "black") +
+  geom_vline(xintercept=3, linetype="dashed", color = "black") 
+
+## Plot the DPs of the vcfs
+## red is variants highly called > 3% AF but decreased below 3% AF
+point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =  "Sentieon 2.1.0 DP", y_label = "Sentieon 3.2.0 DP") ++
+   geom_point(data=vcfsmerged[which(vcfsmerged$site_ref %in% vcf2_withvcf2uniqAF_formatted$site_ref),], aes(x =DP_v2, y = DP_v3), color = "red") 
 ```
 
 
