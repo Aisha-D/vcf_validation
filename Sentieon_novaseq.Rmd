@@ -179,9 +179,6 @@ getwd()
 ```
 
 ```{python}
-import os
-cwd = os.getcwd()
-print(cwd)
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted.vcf'
 vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
@@ -263,11 +260,11 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
 
 ## Distribution of AF of unique variants across chromosome
 ```{python}
-vcf3_df_unique = vcf3_df.loc[-vcf3_df['site'].isin(common_sites)]
+vcf3_df_unique = vcf3_df.loc[-vcf3_df['site_ref'].isin(common_sites)]
 print("All v3 variants:" + str(len(vcf3_df)))
 print("All unique v3 variants:" + str(len(vcf3_df_unique)))
 
-vcf2_df_unique = vcf2_df.loc[-vcf2_df['site'].isin(common_sites)]
+vcf2_df_unique = vcf2_df.loc[-vcf2_df['site_ref'].isin(common_sites)]
 print("All v2 variants:" + str(len(vcf2_df)))
 print("All unique v2 variants:" + str(len(vcf2_df_unique)))
 
@@ -526,8 +523,6 @@ print("Number of variants in control that is vcf v2: " + str(len(vcf3_ON_df)))
 
 
 ```{r}
-library(ggplot2)
-library("ggpubr")
 # v2
 vcf2_ON_df = py$vcf2_ON_df
 #remove % sign and change to interger 
@@ -557,18 +552,18 @@ vcf3_ON_df2
 ggscatter(vcf3_ON_df, x = "AF_v3", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Oncospan_1st_S39_L001",
+          title = "Oncospan_1st",
           xlab = "Sentieon 3.2.0 AF", ylab = "Expected AF")
 
 ggplot(vcf2_ON_df) + 
   geom_density(aes(x = vcf2_ON_df$AF_v2), color = "blue") + 
   geom_density(aes(x = vcf2_ON_df$EXP_AF), color = "red") +
-  labs(title = "Oncospan_1st_S39_L001")
+  labs(title = "Oncospan_1st")
 
 ggplot(vcf3_ON_df) + 
   geom_density(aes(x = vcf3_ON_df$AF_v3), color = "blue") + 
   geom_density(aes(x = vcf3_ON_df$EXP_AF), color = "red") +
-  labs(title = "Sentieon v3 shared AF distribution: Oncospan_1st_S39_L001")
+  labs(title = "Sentieon v3 shared AF distribution: Oncospan_1st")
 
 v2_v3_df <- merge( x = vcf2_ON_df, y = vcf3_ON_df, by = "site")
 v2_v3_df$v3_v2_diff = v2_v3_df$AF_v3 - v2_v3_df$AF_v2
@@ -578,7 +573,7 @@ ggscatter(v2_v3_df2, x = "AF_v2", y = "AF_v3",
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
           xlab = "Sentieon 2.1.0 AF", ylab = "Sentieon 3.2.0 AF",
-          title = "Oncospan_1st_S39_L001")
+          title = "Oncospan_1st")
 v2_v3_df2 <- v2_v3_df2[order(v2_v3_df2$v3_v2_diff),]
 v2_v3_df2
 
@@ -643,14 +638,14 @@ cols.num <- c("AF_v2", "AF_byreads_v2" )
 vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
 
 
-vcfmerged_lowvafinv3 <- vcfsmerged[which(vcfsmerged$site %in% vcf3_withvcf2uniqAF_formatted$site), ]
+vcfmerged_lowvafinv3 <- vcfsmerged[which(vcfsmerged$site_ref %in% vcf3_withvcf2uniqAF_formatted$site_ref), ]
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
 ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3")
+   labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "Oncospan_1st")
 
 ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
     geom_point() +
@@ -658,7 +653,7 @@ ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3")
+  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "Oncospan_1st")
 
 
 ## mutect2 AF vs raw AF vcf v2
@@ -670,7 +665,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0")
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_1st")
 
 ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_point() +
@@ -680,7 +675,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0") +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_1st") +
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -692,7 +687,7 @@ ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0")
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_1st")
 
 ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_point() +
@@ -701,7 +696,7 @@ ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_abline() + 
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0")+
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_1st") +
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -713,7 +708,7 @@ ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3")
+  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "Oncospan_1st")
 
 ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_point() +
@@ -721,7 +716,7 @@ ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3") +
+    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3" , title = "Oncospan_1st") +
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -734,7 +729,7 @@ ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3") 
+    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "Oncospan_1st") 
 ```
 
 
@@ -754,13 +749,13 @@ vcf2_ON_df2
 ggscatter(vcf2_ON_df, x = "AF_v2", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v2.1.0 AF vs Expected AF",
+          title = "Sentieon v2.1.0 AF vs Expected AF Oncospan_1st",
           xlab = "Sentieon 2.1.0 AF", ylab = "Expected AF")
 
 ggscatter(vcf2_ON_df, x = "AF_byreads_v2", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AFOncospan_1st",
           xlab = "RAW AF", ylab = "Expected AF")
 
 # v3
@@ -777,26 +772,26 @@ vcf3_ON_df2
 ggscatter(vcf3_ON_df, x = "AF_v3", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AF Oncospan_1st",
           xlab = "Sentieon 3.2.0 mutect2 AF", ylab = "Expected AF")
 
 ggscatter(vcf3_ON_df, x = "AF_byreads_v3", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AF Oncospan_1st",
           xlab = "RAW AF", ylab = "Expected AF")
 
 ggplot(vcf2_ON_df) + 
   geom_density(aes(x = vcf2_ON_df$AF_v2), color = "blue") + 
   geom_density(aes(x = vcf2_ON_df$AF_byreads_v2), color = "green") +
   geom_density(aes(x = vcf2_ON_df$EXP_AF), color = "red") +
-  labs(title = "Sentieon v2 shared AF distribution")
+  labs(title = "Sentieon v2 shared AF distribution Oncospan_1st")
 
 ggplot(vcf3_ON_df) + 
   geom_density(aes(x = vcf3_ON_df$AF_v3), color = "blue") + 
   geom_density(aes(x = vcf3_ON_df$AF_byreads_v3), color = "green") +
   geom_density(aes(x = vcf3_ON_df$EXP_AF), color = "red") +
-  labs(title = "Sentieon v3 shared AF distribution")
+  labs(title = "Sentieon v3 shared AF distribution Oncospan_1st")
 ```
 
 ```{r, fig.height= 10}
@@ -805,12 +800,12 @@ ggplot(vcf3_ON_df) +
 vcf2_ON_df_mlt <- melt(vcf2_ON_df[, c('site', "MAF_EXP", "RAF_EXP")], id.vars='site')
 ggplot(vcf2_ON_df_mlt, aes(y=site, x=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge') +
-  labs(title = "Sentieon v2")
+  labs(title = "Sentieon v2 Oncospan_1st")
   
 vcf3_ON_df_mlt <- melt(vcf3_ON_df[, c('site', "MAF_EXP", "RAF_EXP")], id.vars='site')
 ggplot(vcf3_ON_df_mlt, aes(y=site, x=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge')+
-  labs(title = "Sentieon v3")
+  labs(title = "Sentieon v3 Oncospan_1st")
 
 # join tables
 joined_vcfs <- merge(vcf2_ON_df, vcf3_ON_df, by = "site_ref")
@@ -820,7 +815,8 @@ ggplot(joined_vcfs) +
   geom_density(aes(x = joined_vcfs$AF_byreads_v2),color = "cyan" ) +
   geom_density(aes(x = joined_vcfs$AF_v3),color = "black" ) +
   geom_density(aes(x = joined_vcfs$AF_byreads_v3),color = "brown" ) +
-  geom_density(aes(x = joined_vcfs$EXP_AF.x),color = "red" )
+  geom_density(aes(x = joined_vcfs$EXP_AF.x),color = "red" ) +
+  labs(title = "Oncospan_1st")
 
 joined_df <- joined_vcfs[,c('site_ref', "EXP_AF.x","AF_v2", "AF_byreads_v2", "AF_v3", "AF_byreads_v3")]
 colnames(joined_df) <- c('site_ref',"Expected_AF",  "Mutect2_AF_v2", "RAW_AF_v2", "Mutect2_AF_v3", "RAW_AF_v3")
@@ -832,7 +828,7 @@ colnames(joined_vcfs) <- c('site_ref', "MAF_EXP_v2", "RAF_EXP_v2", "MAF_EXP_v3",
 joined_vcfs_mlt <- melt(joined_vcfs, id.vars='site_ref')
 ggplot(joined_vcfs_mlt, aes(y=site_ref, x=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge')+
-  labs(x = "Difference between observed - expected AF")
+  labs(x = "Difference between observed - expected AF", title = "Oncospan_1st")
 
 joined_df <- joined_df[order(joined_df$MAF_RAW_v2),]
 joined_df
@@ -914,7 +910,7 @@ ggscatter(vcfsmerged, x = "DP_v2", y = "DP_v3",
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
           xlab = "Sentieon 2.1.0 VCF", ylab = "Sentieon 3.2.0 VCF",
-          title = "Oncospan_2nd_S40")
+          title = "Oncospan_2nd")
 
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$DP_v2, vcfsmerged$DP_v3), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
 ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
@@ -922,7 +918,7 @@ ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-    labs(title = "Oncospan_2nd_S40")
+    labs(title = "Oncospan_2nd")
 
 
 vcfsmerged$AF_x <- as.numeric(vcfsmerged$AF_x)
@@ -933,7 +929,7 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF", title = "Oncospan_2nd_S40")
+  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF", title = "Oncospan_2nd")
 ```
 
 
@@ -955,12 +951,12 @@ print("All unique v2 variants:" + str(len(vcf2_df_unique)))
 #v2
 dat <- py$vcf2_df_uniq
 dat$AF <- as.numeric(dat$AF)
-plot(density(dat$AF), main = "Unique v2 variants AF oncospan")
+plot(density(dat$AF), main = "Unique v2 variants AF oncospan_2nd")
 
 #v3
 dat <- py$vcf3_df_uniq
 dat$AF <- as.numeric(dat$AF)
-plot(density(dat$AF), main = "Unique v3 variants AF oncospan")
+plot(density(dat$AF), main = "Unique v3 variants AF oncospan_2nd")
 ```
 
 
@@ -1027,7 +1023,7 @@ print("uniq vcf v3:" + str(len(vcf3_df_uniq)))
 
 #venn2(subsets = (30, 10, 5), set_labels = ('Group A', 'Group B'))
 venn2(subsets = (len(vcf2_df_uniq), len(vcf3_df_uniq), len(common_sites)), set_labels = ('Sentieon v2', 'Sentieon v3'))
-plt.title('Oncospan_2nd_S40',fontweight='bold',fontsize=20,pad=30)
+plt.title('Oncospan_2nd',fontweight='bold',fontsize=20,pad=30)
 plt.show()
 
 ```
@@ -1264,7 +1260,7 @@ vcf2_ON_df2
 ggscatter(vcf2_ON_df, x = "AF_v2", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Oncospan_2nd_S40",
+          title = "Oncospan_2nd",
           xlab = "Sentieon 2.1.0 AF", ylab = "Expected AF")
 
 # v3
@@ -1287,12 +1283,12 @@ ggscatter(vcf3_ON_df, x = "AF_v3", y = "EXP_AF",
 ggplot(vcf2_ON_df) + 
   geom_density(aes(x = vcf2_ON_df$AF_v2), color = "blue") + 
   geom_density(aes(x = vcf2_ON_df$EXP_AF), color = "red") +
-  labs(title = "Sentieon v2 shared AF distribution Oncospan_2nd_S40")
+  labs(title = "Sentieon v2 shared AF distribution Oncospan_2nd")
 
 ggplot(vcf3_ON_df) + 
   geom_density(aes(x = vcf3_ON_df$AF_v3), color = "blue") + 
   geom_density(aes(x = vcf3_ON_df$EXP_AF), color = "red") +
-  labs(title = "Sentieon v3 shared AF distribution Oncospan_2nd_S40")
+  labs(title = "Sentieon v3 shared AF distribution Oncospan_2nd")
 
 v2_v3_df <- merge( x = vcf2_ON_df, y = vcf3_ON_df, by = "site")
 v2_v3_df$v3_v2_diff = v2_v3_df$AF_v3 - v2_v3_df$AF_v2
@@ -1302,7 +1298,7 @@ ggscatter(v2_v3_df2, x = "AF_v2", y = "AF_v3",
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
           xlab = "Sentieon 2.1.0 AF", ylab = "Sentieon 3.2.0 AF",
-          title = "Oncospan_2nd_S40")
+          title = "Oncospan_2nd")
 v2_v3_df2 <- v2_v3_df2[order(v2_v3_df2$v3_v2_diff),]
 v2_v3_df2
 ```
@@ -1374,7 +1370,7 @@ ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3")
+  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "Oncospan_2nd")
 
 ## mutect2 AF vs raw AF vcf v2
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
@@ -1385,7 +1381,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0")
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_2nd")
 
 ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_point() +
@@ -1395,7 +1391,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0") +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 Oncospan_2nd") +
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -1407,7 +1403,7 @@ ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0")
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_2nd")
 
 ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_point() +
@@ -1416,7 +1412,7 @@ ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_abline() + 
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0")+
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 Oncospan_2nd")+
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -1428,7 +1424,7 @@ ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3")
+  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "Oncospan_2nd")
 
 ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_point() +
@@ -1436,7 +1432,7 @@ ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3") +
+    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "Oncospan_2nd") +
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -1449,7 +1445,7 @@ ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3") 
+    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "Oncospan_2nd") 
 ```
 
 
@@ -1470,13 +1466,13 @@ vcf2_ON_df2
 ggscatter(vcf2_ON_df, x = "AF_v2", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v2.1.0 AF vs Expected AF",
+          title = "Sentieon v2.1.0 AF vs Expected AF Oncospan_2nd",
           xlab = "Sentieon 2.1.0 AF", ylab = "Expected AF")
 
 ggscatter(vcf2_ON_df, x = "AF_byreads_v2", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AF Oncospan_2nd",
           xlab = "RAW AF", ylab = "Expected AF")
 
 # v3
@@ -1493,26 +1489,26 @@ vcf3_ON_df2
 ggscatter(vcf3_ON_df, x = "AF_v3", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AF Oncospan_2nd",
           xlab = "Sentieon 3.2.0 mutect2 AF", ylab = "Expected AF")
 
 ggscatter(vcf3_ON_df, x = "AF_byreads_v3", y = "EXP_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AF Oncospan_2nd",
           xlab = "RAW AF", ylab = "Expected AF")
 
 ggplot(vcf2_ON_df) + 
   geom_density(aes(x = vcf2_ON_df$AF_v2), color = "blue") + 
   geom_density(aes(x = vcf2_ON_df$AF_byreads_v2), color = "green") +
   geom_density(aes(x = vcf2_ON_df$EXP_AF), color = "red") +
-  labs(title = "Sentieon v2 shared AF distribution")
+  labs(title = "Sentieon v2 shared AF distribution Oncospan_2nd")
 
 ggplot(vcf3_ON_df) + 
   geom_density(aes(x = vcf3_ON_df$AF_v3), color = "blue") + 
   geom_density(aes(x = vcf3_ON_df$AF_byreads_v3), color = "green") +
   geom_density(aes(x = vcf3_ON_df$EXP_AF), color = "red") +
-  labs(title = "Sentieon v3 shared AF distribution")
+  labs(title = "Sentieon v3 shared AF distribution Oncospan_2nd")
 ```
 
 ```{r, fig.height= 10}
@@ -1536,7 +1532,8 @@ ggplot(joined_vcfs) +
   geom_density(aes(x = joined_vcfs$AF_byreads_v2),color = "cyan" ) +
   geom_density(aes(x = joined_vcfs$AF_v3),color = "black" ) +
   geom_density(aes(x = joined_vcfs$AF_byreads_v3),color = "brown" ) +
-  geom_density(aes(x = joined_vcfs$EXP_AF.x),color = "red" )
+  geom_density(aes(x = joined_vcfs$EXP_AF.x),color = "red" ) +
+  labs(title = "Oncospan_2nd")
 
 joined_df <- joined_vcfs[,c('site', "EXP_AF.x","AF_v2", "AF_byreads_v2", "AF_v3", "AF_byreads_v3")]
 colnames(joined_df) <- c('site',"Expected_AF",  "Mutect2_AF_v2", "RAW_AF_v2", "Mutect2_AF_v3", "RAW_AF_v3")
@@ -1548,7 +1545,7 @@ colnames(joined_vcfs) <- c('site', "MAF_EXP_v2", "RAF_EXP_v2", "MAF_EXP_v3", "RA
 joined_vcfs_mlt <- melt(joined_vcfs, id.vars='site')
 ggplot(joined_vcfs_mlt, aes(y=site, x=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge')+
-  labs(x = "Difference between observed - expected AF")
+  labs(x = "Difference between observed - expected AF", title = "Oncospan_2nd")
 
 joined_df <- joined_df[order(joined_df$MAF_RAW_v2),]
 joined_df
@@ -1636,7 +1633,8 @@ ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
-    annotation_custom(grob1)
+    annotation_custom(grob1) +
+    labs(title = "HD734")
 
 
 vcfsmerged$AF_x <- as.numeric(vcfsmerged$AF_x)
@@ -1647,7 +1645,7 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF")
+  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF", title = "HD734")
 ```
 
 
@@ -1690,12 +1688,12 @@ print("All unique v2 variants:" + str(len(vcf2_df_unique)))
 #v2
 dat <- py$vcf2_df_uniq
 dat$AF <- as.numeric(dat$AF)
-plot(density(dat$AF), main = "Unique v2 variants AF oncospan")
+plot(density(dat$AF), main = "Unique v2 variants AF HD734")
 
 #v3
 dat <- py$vcf3_df_uniq
 dat$AF <- as.numeric(dat$AF)
-plot(density(dat$AF), main = "Unique v3 variants AF oncospan")
+plot(density(dat$AF), main = "Unique v3 variants AF HD734")
 
 ```
 
@@ -1950,7 +1948,7 @@ HD734_var_v2
 ggscatter(HD734_var_v2, x = "vcf2_AF", y = "Expected_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v2.1.0 AF vs Expected AF",
+          title = "Sentieon v2.1.0 AF vs Expected AF HD734",
           xlab = "Sentieon 2.1.0 AF", ylab = "Expected AF")
 
 # v3
@@ -1967,18 +1965,18 @@ HD734_var_v3
 ggscatter(HD734_var_v3, x = "vcf3_AF", y = "Expected_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AF HD734",
           xlab = "Sentieon 3.2.0 AF", ylab = "Expected AF")
 
 ggplot(HD734_var_v2) + 
   geom_density(aes(x = HD734_var_v2$vcf2_AF), color = "blue") + 
   geom_density(aes(x = HD734_var_v2$Expected_AF), color = "red") +
-  labs(title = "Sentieon v2 shared AF distribution")
+  labs(title = "Sentieon v2 shared AF distribution HD734")
 
 ggplot(HD734_var_v3) + 
   geom_density(aes(x = HD734_var_v3$vcf3_AF), color = "blue") + 
   geom_density(aes(x = HD734_var_v3$Expected_AF), color = "red") +
-  labs(title = "Sentieon v3 shared AF distribution")
+  labs(title = "Sentieon v3 shared AF distribution HD734")
 
 HD734_var <- merge(HD734_var_v3, HD734_var_v2, by ="GRCh38_co-ordinates" )
 HD734_var = HD734_var[,c("GRCh38_co-ordinates" , "Expected_AF.x", "vcf2_AF","v2_diff", "vcf3_AF", "v3_diff")]
@@ -1987,7 +1985,7 @@ HD734_var
 ggscatter(HD734_var, x = "vcf2_AF", y = "vcf3_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v2.1.0  AF vs Sentieon v3.2.0 AF",
+          title = "Sentieon v2.1.0  AF vs Sentieon v3.2.0 AF HD734",
           xlab = "Sentieon v2.1.0 AF", ylab = "Sentieon v3.2.0 AF")
 ```
 
@@ -2058,7 +2056,7 @@ ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3")
+  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "HD734")
 
 ## mutect2 AF vs raw AF vcf v2
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
@@ -2069,7 +2067,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) + 
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0")
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 HD734")
 
 ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_point() +
@@ -2079,7 +2077,7 @@ ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0") +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 HD734") +
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -2091,7 +2089,7 @@ ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0")
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 HD734")
 
 ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_point() +
@@ -2100,7 +2098,7 @@ ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
     geom_abline() + 
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0")+
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 HD734")+
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -2112,7 +2110,7 @@ ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3")
+  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "HD734")
 
 ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_point() +
@@ -2120,7 +2118,7 @@ ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
     geom_abline() +
     geom_hline(yintercept=3, linetype="dashed", color = "black") +
     geom_vline(xintercept=3, linetype="dashed", color = "black") +
-    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3") +
+    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "HD734") +
     scale_x_continuous(limits = c(0, 25))+
     scale_y_continuous(limits = c(0, 25))
 
@@ -2133,7 +2131,7 @@ ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
-    labs(x = "DP sentieon v2", y = "DP sentieon v3") 
+    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "HD734") 
 ```
 
 ```{python}
@@ -2377,14 +2375,15 @@ print(paste("Number of different read depths on shared sites", nrow(vcfsmerged[!
 ggscatter(vcfsmerged, x = "DP_v2", y = "DP_v3", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Sentieon 2.1.0 VCF", ylab = "Sentieon 3.2.0 VCF")
+          xlab = "Sentieon 2.1.0 VCF", ylab = "Sentieon 3.2.0 VCF", title = "HD829")
 
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$DP_v2, vcfsmerged$DP_v3), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
 ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
-    annotation_custom(grob1)
+    annotation_custom(grob1) +
+  labs(title= "HD829")
 
 
 vcfsmerged$AF_x <- as.numeric(vcfsmerged$AF_x)
@@ -2395,7 +2394,7 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF")
+  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF", title  = "HD829")
 ```
 
 
@@ -2434,12 +2433,12 @@ print("All unique v2 variants:" + str(len(vcf2_df_unique)))
 #v2
 dat <- py$vcf2_df_uniq
 dat$AF <- as.numeric(dat$AF)
-plot(density(dat$AF), main = "Unique v2 variants AF oncospan")
+plot(density(dat$AF), main = "Unique v2 variants AF HD829")
 
 #v3
 dat <- py$vcf3_df_uniq
 dat$AF <- as.numeric(dat$AF)
-plot(density(dat$AF), main = "Unique v3 variants AF oncospan")
+plot(density(dat$AF), main = "Unique v3 variants AF HD829")
 ```
 
 
@@ -2700,7 +2699,7 @@ HD829_var_v2
 ggscatter(HD829_var_v2, x = "vcf2_AF", y = "Expected_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v2.1.0 AF vs Expected AF",
+          title = "Sentieon v2.1.0 AF vs Expected AF HD829",
           xlab = "Sentieon 2.1.0 AF", ylab = "Expected AF")
 
 # v3
@@ -2717,18 +2716,18 @@ HD829_var_v3
 ggscatter(HD829_var_v3, x = "vcf3_AF", y = "Expected_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v3.2.0 AF vs Expected AF",
+          title = "Sentieon v3.2.0 AF vs Expected AF HD829",
           xlab = "Sentieon 3.2.0 AF", ylab = "Expected AF")
 
 ggplot(HD829_var_v2) + 
   geom_density(aes(x = HD829_var_v2$vcf2_AF), color = "blue") + 
   geom_density(aes(x = HD829_var_v2$Expected_AF), color = "red") +
-  labs(title = "Sentieon v2 shared AF distribution")
+  labs(title = "Sentieon v2 shared AF distribution HD829")
 
 ggplot(HD829_var_v3) + 
   geom_density(aes(x = HD829_var_v3$vcf3_AF), color = "blue") + 
   geom_density(aes(x = HD829_var_v3$Expected_AF), color = "red") +
-  labs(title = "Sentieon v3 shared AF distribution")
+  labs(title = "Sentieon v3 shared AF distribution HD829")
 
 HD829_var <- merge(HD829_var_v3, HD829_var_v2, by ="GRCh38_co-ordinates" )
 HD829_var = HD829_var[,c("GRCh38_co-ordinates" , "Expected_AF.x", "vcf2_AF","v2_diff", "vcf3_AF", "v3_diff")]
@@ -2737,7 +2736,7 @@ HD829_var
 ggscatter(HD829_var, x = "vcf2_AF", y = "vcf3_AF", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          title = "Sentieon v2.1.0  AF vs Sentieon v3.2.0 AF",
+          title = "Sentieon v2.1.0  AF vs Sentieon v3.2.0 AF HD829",
           xlab = "Sentieon v2.1.0 AF", ylab = "Sentieon v3.2.0 AF")
 ```
 
@@ -2781,16 +2780,24 @@ ggscatter(HD829_var, x = "vcf2_AF", y = "vcf3_AF",
 
 # Clinical sample 1: 2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001
 
+```{bash}
+
+# bcftools='/home/aisha/Softwares/bin/bcftools'
+# cd ..
+
+#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf -o  vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf
+
+# version 2 has column incompatible for left align when normalising multi allelic variants
+# scp vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_copy.vcf
+# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf
+
+```
+
 ## Read depth of shared sites
 
 ```{python}
-import pandas as pd
-import os
-cwd = os.getcwd()
-print(cwd)
-
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -2799,45 +2806,22 @@ vcf2_df = pd.read_csv(vcf2, sep="\t", comment='#',
 vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
                     names=cols, compression='infer')
 
-
-## Get depths at each pos for vcf sentieon v2
-vcf2_df['site'] = vcf2_df['CHROM'].astype(str) + ':' + vcf2_df['POS'].astype(str)
-vcf2_df['DP'] = vcf2_df['INFO'].str.split(';').apply(
-        lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf2_df['DP'] = vcf2_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-
-## Get depths at each pos for vcf sentieon v3
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
-vcf3_df['DP'] = vcf3_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf3_df['DP'] = vcf3_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-vcf2_df['AF'] = vcf2_df['SAMPLE'].str.split(':', expand=True)[2]
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
+vcf2_df = reformat_vcf(vcf2_df, 2)
+vcf3_df = reformat_vcf(vcf3_df, 3)
 
 #how many sites overlap between the two versions
-print("number of rows for vcf v2: " + str(len(vcf2_df))) #207,067
-print("number of rows for vcf v3: " + str(len(vcf3_df))) #443,904
+print("number of rows for vcf v2: " + str(len(vcf2_df))) 
+print("number of rows for vcf v3: " + str(len(vcf3_df))) 
 
-# Filter common sites between two vcfs
-def common_elements(list1, list2):
-    return list(set(list1) & set(list2))
 
-common_sites = common_elements(vcf2_df.site,vcf3_df.site)
+common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
 print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites))) # 196,147
 
-vcf2_df_common = vcf2_df.loc[vcf2_df['site'].isin(common_sites)]
-vcf3_df_common = vcf3_df.loc[vcf3_df['site'].isin(common_sites)]
-
-# rename DP in columns as we will merge soon 
-vcf3_df_common = vcf3_df_common.rename({'DP': 'DP_v3'}, axis=1)
-vcf2_df_common = vcf2_df_common.rename({'DP': 'DP_v2'}, axis=1)
+vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
 # save common snps
-vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site')
-vcfs_merged.to_csv('Merged_vcfs_common.tsv', sep="\t", index=False, header=True)
-
-#cfs_merged['DP_v3'].corr(vcfs_merged['DP_v2'])
-vcfs_merged['DP_v3'] = vcfs_merged['DP_v3'].astype(int)
-vcfs_merged['DP_v2'] = vcfs_merged['DP_v2'].astype(int)
+vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 
 
 ```
@@ -2845,12 +2829,8 @@ vcfs_merged['DP_v2'] = vcfs_merged['DP_v2'].astype(int)
 
 ```{python}
 ## plot venn diagram of shared variants and unique to each variant
-from matplotlib_venn import venn2, venn2_circles, venn2_unweighted
-from matplotlib_venn import venn3, venn3_circles
-from matplotlib import pyplot as plt
-
-vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site'].isin(common_sites)]
-vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site'].isin(common_sites)]
+vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site_ref'].isin(common_sites)]
 
 print("uniq vcf v2:" + str(len(vcf2_df_uniq)))
 print("uniq vcf v3:" + str(len(vcf3_df_uniq)))
@@ -2864,21 +2844,11 @@ plt.show()
 
 
 ```{r }
-vcfsmerged = read.csv("Merged_vcfs_common.tsv", sep = "\t")
+vcfsmerged = py$vcfs_merged
 #nrow(vcfsmerged)
 
 print(paste("Number of duplicate read depths on shared sites", nrow(vcfsmerged[duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #191117
 print(paste("Number of different read depths on shared sites", nrow(vcfsmerged[!duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #5030
-
-#ggplot(vcfsmerged, aes(x = DP_v2, y= DP_v3),
-#  + geom_point())
-
-#plot(vcfsmerged$DP_v3, vcfsmerged$DP_v2)
-#cor(vcfsmerged$DP_v3, vcfsmerged$DP_v2, method = c("pearson"))
-library(ggplot2)
-library("ggpubr")
-library(grid)
-library(gridExtra)
 
 ggscatter(vcfsmerged, x = "DP_v2", y = "DP_v3", 
           add = "reg.line", conf.int = TRUE, 
@@ -2890,7 +2860,8 @@ ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
-    annotation_custom(grob1)
+    annotation_custom(grob1) +
+  labs(title = "2109024-21286Z0006")
 
 
 vcfsmerged$AF_x <- as.numeric(vcfsmerged$AF_x)
@@ -2901,7 +2872,7 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF")
+  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF", title = "2109024-21286Z0006")
 ```
 
 
@@ -2909,10 +2880,8 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
 
 ## Distribution of AF of unique variants across chromosome
 ```{python}
-import pandas as pd
-
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -2921,24 +2890,16 @@ vcf2_df = pd.read_csv(vcf2, sep="\t", comment='#',
 vcf3_df = pd.read_csv(vcf3, sep="\t", comment='#', 
                     names=cols, compression='infer')
                     
-# get count of chromosomes occurrences
-vcf2_df['AF'] = vcf2_df['SAMPLE'].str.split(':', expand=True)[2]
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
+vcf2_df = reformat_vcf(vcf2_df, 2)
+vcf3_df = reformat_vcf(vcf3_df, 3)
 
-## Get site to get common/unique variants
-vcf2_df['site'] = vcf2_df['CHROM'].astype(str) + ':' + vcf2_df['POS'].astype(str)
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
+common_sites = common_elements(vcf3_df.site_ref,vcf2_df.site_ref)
 
-# get common sites then get inverse to get unique
-def common_elements(list1, list2):
-    return list(set(list1) & set(list2))
-common_sites = common_elements(vcf3_df.site,vcf2_df.site)
-
-vcf3_df_unique = vcf3_df.loc[-vcf3_df['site'].isin(common_sites)]
+vcf3_df_unique = vcf3_df.loc[-vcf3_df['site_ref'].isin(common_sites)]
 print("All v3 variants:" + str(len(vcf3_df)))
 print("All unique v3 variants:" + str(len(vcf3_df_unique)))
 
-vcf2_df_unique = vcf2_df.loc[-vcf2_df['site'].isin(common_sites)]
+vcf2_df_unique = vcf2_df.loc[-vcf2_df['site_ref'].isin(common_sites)]
 print("All v2 variants:" + str(len(vcf2_df)))
 print("All unique v2 variants:" + str(len(vcf2_df_unique)))
 
@@ -2946,29 +2907,19 @@ print("All unique v2 variants:" + str(len(vcf2_df_unique)))
 
 
 ```{r}
+
+#v2
+dat <- py$vcf2_df_uniq
+dat$AF <- as.numeric(dat$AF)
+plot(density(dat$AF), main = "Unique v2 variants AF 2109024-21286Z0006")
+#v3
+dat <- py$vcf3_df_uniq
+dat$AF <- as.numeric(dat$AF)
+plot(density(dat$AF), main = "Unique v3 variants AF 2109024-21286Z0006")
+
 dat <- py$vcf3_df_unique
 dat$AF <- as.numeric(dat$AF)
 
-# remove mnps 
-nrow(dat[which(is.na(dat$AF)),])
-nrow(dat[complete.cases(dat), ])
-
-dat <- dat[complete.cases(dat), ]
-
-plot(density(dat$AF), main = "Unique v3 variants AF 2109024-21286Z0006")
-```
-
-```{r}
-dat <- py$vcf2_df_unique
-dat$AF <- as.numeric(dat$AF)
-
-# remove mnps 
-nrow(dat[which(is.na(dat$AF)),])
-nrow(dat[complete.cases(dat), ])
-
-dat <- dat[complete.cases(dat), ]
-
-plot(density(dat$AF), main = "Unique v2 variants AF 2109024-21286Z0006")
 ```
 
 
@@ -2983,16 +2934,15 @@ cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 
 #bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf > vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf
 
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted_goodAF.vcf
+
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted_goodAF.vcf
+
 ```
 
 ```{python}
-import pandas as pd
-import os
-cwd = os.getcwd()
-print(cwd)
-
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted_goodAF.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted_goodAF.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -3002,54 +2952,27 @@ vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#',
                     names=cols, compression='infer')
 
 
-## Get depths at each pos for vcf sentieon v2
-vcf2_df['site'] = vcf2_df['CHROM'].astype(str) + ':' + vcf2_df['POS'].astype(str)
-vcf2_df['DP'] = vcf2_df['INFO'].str.split(';').apply(
-        lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf2_df['DP'] = vcf2_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
+vcf2_df = reformat_vcf(vcf2_df, 2)
+vcf3_df = reformat_vcf(vcf3_df, 3)
 
-## Get depths at each pos for vcf sentieon v3
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
-vcf3_df['DP'] = vcf3_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf3_df['DP'] = vcf3_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-vcf2_df['AF'] = vcf2_df['SAMPLE'].str.split(':', expand=True)[2]
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
 
 #how many sites overlap between the two versions
 print("number of rows for vcf v2: " + str(len(vcf2_df))) #207,067
 print("number of rows for vcf v3: " + str(len(vcf3_df))) #443,904
 
-# Filter common sites between two vcfs
-def common_elements(list1, list2):
-    return list(set(list1) & set(list2))
-
-common_sites = common_elements(vcf2_df.site,vcf3_df.site)
+common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
 print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites))) # 196,147
 
-vcf2_df_common = vcf2_df.loc[vcf2_df['site'].isin(common_sites)]
-vcf3_df_common = vcf3_df.loc[vcf3_df['site'].isin(common_sites)]
-
-# rename DP in columns as we will merge soon 
-vcf3_df_common = vcf3_df_common.rename({'DP': 'DP_v3'}, axis=1)
-vcf2_df_common = vcf2_df_common.rename({'DP': 'DP_v2'}, axis=1)
+vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
 # save common snps
-vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site')
-vcfs_merged.to_csv('Merged_vcfs_common.tsv', sep="\t", index=False, header=True)
-
-#cfs_merged['DP_v3'].corr(vcfs_merged['DP_v2'])
-vcfs_merged['DP_v3'] = vcfs_merged['DP_v3'].astype(int)
-vcfs_merged['DP_v2'] = vcfs_merged['DP_v2'].astype(int)
+vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 ```
 
 ```{python}
-## plot venn diagram of shared variants and unique to each variant
-from matplotlib_venn import venn2, venn2_circles, venn2_unweighted
-from matplotlib_venn import venn3, venn3_circles
-from matplotlib import pyplot as plt
-
-vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site'].isin(common_sites)]
-vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site'].isin(common_sites)]
+vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site_ref'].isin(common_sites)]
 
 print("uniq vcf v2:" + str(len(vcf2_df_uniq)))
 
@@ -3077,20 +3000,19 @@ There are 87 variants that are have AF greater than 3% but do not appear in sent
 vcf2_AF_uniq = vcf2_df_uniq
 
 # read in vcf3 all
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
                     names=cols, compression='infer')
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
-vcf3_df['DP'] = vcf3_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf3_df['DP'] = vcf3_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
+                    
+                   
+vcf3_df = reformat_vcf(vcf3_df, 3)
 
 # filter the vcf3 for sites in vcf2_AF_uniq
-vcf3_withvcf2uniqAF = vcf3_df.loc[vcf3_df['site'].isin(vcf2_AF_uniq.site)]
+vcf3_withvcf2uniqAF = vcf3_df.loc[vcf3_df['site_ref'].isin(vcf2_AF_uniq.site_ref)]
 
-# there 25 variants carried over vcf3 with lower AF but there is 17 variants not called in sentieon v3. These are:
-lowvcf2uniqAF_droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site'].isin(vcf3_withvcf2uniqAF.site)]
+# filter for vcf2 not called in sentieon 3 at all
+vcf2_uniqv2droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
 ```
 
 ```{r}
@@ -3099,9 +3021,9 @@ print(c("Number of variants that dropped below 3% AF in sentieon v3:   ", nrow(v
 vcf3_withvcf2uniqAF
 
 
-lowvcf2uniqAF_droppedinv3 <- py$lowvcf2uniqAF_droppedinv3
-print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(lowvcf2uniqAF_droppedinv3)))
-lowvcf2uniqAF_droppedinv3
+vcf2_uniqv2droppedinv3 <- py$vcf2_uniqv2droppedinv3
+print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(vcf2_uniqv2droppedinv3)))
+vcf2_uniqv2droppedinv3
 ```
 
 Of the 87 variants, 56 are in sentieon v3 vcf but have AF lower than 3%. The other 31 variants are not called at all by sentieon v3. Most of these missing variants tend to be indels.
@@ -3205,17 +3127,168 @@ knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/n
 ```
 
 
+## Compare true positives variants mutect2 AF to normal AF (alt / (ref + alt))
+
+```{bash}
+#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
+#bedtools intersect -a vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_goodAF.vcf -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_goodAF.vcf -header -v | bedtools intersect -a - -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz -v > TMv2OCT20-oncospan-cell-line-1st_S39_L001_variantsinv2droppedinv3.vcf
+```
+
+```{python}
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
+cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
+# read vcf records into df
+vcf2_df = pd.read_csv(vcf2, sep="\t", comment='#', 
+                    names=cols, compression='infer')
+vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
+                    names=cols, compression='infer')
+vcf2_df = reformat_vcf(vcf2_df, 2)
+vcf3_df = reformat_vcf(vcf3_df, 3)
+# Filter common sites between two vcfs
+common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
+print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites)))
+vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
+# save common snps
+vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
+```
+
+
+```{r}
+vcfsmerged <- py$vcfs_merged
+vcf2_df <- py$vcf2_df
+vcf3_df <- py$vcf3_df
+vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
+vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
+vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
+cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
+vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
+cols.num <- c("AF_v2", "AF_byreads_v2")
+vcf2_df[cols.num] <- sapply(vcf2_df[cols.num],as.numeric)
+cols.num <- c("AF_v3", "AF_byreads_v3")
+vcf3_df[cols.num] <- sapply(vcf3_df[cols.num],as.numeric)
+cols.num <- c("AF_v3", "AF_byreads_v3" )
+vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
+cols.num <- c("AF_v2", "AF_byreads_v2" )
+vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
+cols.num <- c("AF_v2", "AF_byreads_v2" )
+vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
+vcfmerged_lowvafinv3 <- vcfsmerged[which(vcfsmerged$site_ref %in% vcf3_withvcf2uniqAF_formatted$site_ref), ]
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109024-21286Z0006")
+
+ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
+    geom_point() +
+    geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red") +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109024-21286Z0006")
+
+## mutect2 AF vs raw AF vcf v2
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
+    geom_point() +
+    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) + 
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109024-21286Z0006")
+
+ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
+    geom_point() +
+    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+    geom_smooth() +
+    geom_abline() +
+    geom_hline(yintercept=3, linetype="dashed", color = "black") +
+    geom_vline(xintercept=3, linetype="dashed", color = "black") +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109024-21286Z0006") +
+    scale_x_continuous(limits = c(0, 25))+
+    scale_y_continuous(limits = c(0, 25))
+
+## mutect2 AF vs raw AF vcf v3
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf3_df$AF_byreads_v3, vcf3_df$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109024-21286Z0006")
+
+ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
+    geom_point() +
+      geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
+    geom_smooth() +
+    geom_abline() + 
+    geom_hline(yintercept=3, linetype="dashed", color = "black") +
+    geom_vline(xintercept=3, linetype="dashed", color = "black") +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109024-21286Z0006")+
+    scale_x_continuous(limits = c(0, 25))+
+    scale_y_continuous(limits = c(0, 25))
+
+## raw AF vcf v2 vs raw AF vcf v3
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_byreads_v2, vcfsmerged$AF_byreads_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3 2109024-21286Z0006")
+
+ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    geom_hline(yintercept=3, linetype="dashed", color = "black") +
+    geom_vline(xintercept=3, linetype="dashed", color = "black") +
+    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3 2109024-21286Z0006") +
+    scale_x_continuous(limits = c(0, 25))+
+    scale_y_continuous(limits = c(0, 25))
+
+## Plot the DPs of the 
+vcfsmerged$DP_v2<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v2)))
+vcfsmerged$DP_v3<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v3)))
+ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "2109024-21286Z0006") 
+```
+
 
 
 
 
 # Clinical sample 1: 2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001-EGG2_S4_L001
 
+
+```{bash}
+
+# bcftools='/home/aisha/Softwares/bin/bcftools'
+# cd ..
+
+#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf -o  vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf
+
+# version 2 has column incompatible for left align when normalising multi allelic variants
+# scp vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_copy.vcf
+# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf
+
+```
+
+
 ## Read depth of shared sites
 
 ```{python}
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -3224,58 +3297,29 @@ vcf2_df = pd.read_csv(vcf2, sep="\t", comment='#',
 vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
                     names=cols, compression='infer')
 
-
-## Get depths at each pos for vcf sentieon v2
-vcf2_df['site'] = vcf2_df['CHROM'].astype(str) + ':' + vcf2_df['POS'].astype(str)
-vcf2_df['DP'] = vcf2_df['INFO'].str.split(';').apply(
-        lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf2_df['DP'] = vcf2_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-
-## Get depths at each pos for vcf sentieon v3
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
-vcf3_df['DP'] = vcf3_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf3_df['DP'] = vcf3_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-vcf2_df['AF'] = vcf2_df['SAMPLE'].str.split(':', expand=True)[2]
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
+vcf2_df = reformat_vcf(vcf2_df, 2)
+vcf3_df = reformat_vcf(vcf3_df, 3)
 
 #how many sites overlap between the two versions
 print("number of rows for vcf v2: " + str(len(vcf2_df))) #207,067
 print("number of rows for vcf v3: " + str(len(vcf3_df))) #443,904
 
-# Filter common sites between two vcfs
-def common_elements(list1, list2):
-    return list(set(list1) & set(list2))
-
-common_sites = common_elements(vcf2_df.site,vcf3_df.site)
+common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
 print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites))) # 196,147
 
-vcf2_df_common = vcf2_df.loc[vcf2_df['site'].isin(common_sites)]
-vcf3_df_common = vcf3_df.loc[vcf3_df['site'].isin(common_sites)]
-
-# rename DP in columns as we will merge soon 
-vcf3_df_common = vcf3_df_common.rename({'DP': 'DP_v3'}, axis=1)
-vcf2_df_common = vcf2_df_common.rename({'DP': 'DP_v2'}, axis=1)
+vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
 # save common snps
-vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site')
-vcfs_merged.to_csv('Merged_vcfs_common.tsv', sep="\t", index=False, header=True)
-
-#cfs_merged['DP_v3'].corr(vcfs_merged['DP_v2'])
-vcfs_merged['DP_v3'] = vcfs_merged['DP_v3'].astype(int)
-vcfs_merged['DP_v2'] = vcfs_merged['DP_v2'].astype(int)
-
-
+vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 ```
 
 
 ```{python}
 ## plot venn diagram of shared variants and unique to each variant
-from matplotlib_venn import venn2, venn2_circles, venn2_unweighted
-from matplotlib_venn import venn3, venn3_circles
-from matplotlib import pyplot as plt
 
-vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site'].isin(common_sites)]
-vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site'].isin(common_sites)]
+vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site_ref'].isin(common_sites)]
 
 print("uniq vcf v2:" + str(len(vcf2_df_uniq)))
 print("uniq vcf v3:" + str(len(vcf3_df_uniq)))
@@ -3289,33 +3333,24 @@ plt.show()
 
 
 ```{r }
-vcfsmerged = read.csv("Merged_vcfs_common.tsv", sep = "\t")
+vcfsmerged = py$vcfs_merged
 #nrow(vcfsmerged)
 
 print(paste("Number of duplicate read depths on shared sites", nrow(vcfsmerged[duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #191117
 print(paste("Number of different read depths on shared sites", nrow(vcfsmerged[!duplicated(vcfsmerged[, c("DP_v2","DP_v3")]),]))) #5030
 
-#ggplot(vcfsmerged, aes(x = DP_v2, y= DP_v3),
-#  + geom_point())
-
-#plot(vcfsmerged$DP_v3, vcfsmerged$DP_v2)
-#cor(vcfsmerged$DP_v3, vcfsmerged$DP_v2, method = c("pearson"))
-library(ggplot2)
-library("ggpubr")
-library(grid)
-library(gridExtra)
-
 ggscatter(vcfsmerged, x = "DP_v2", y = "DP_v3", 
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Sentieon 2.1.0 VCF", ylab = "Sentieon 3.2.0 VCF")
+          xlab = "Sentieon 2.1.0 VCF", ylab = "Sentieon 3.2.0 VCF", title = "2109242-21286Z0006")
 
 grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$DP_v2, vcfsmerged$DP_v3), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
 ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
     geom_point() +
     geom_smooth() +
     geom_abline() +
-    annotation_custom(grob1)
+    annotation_custom(grob1) +
+  labs(title = "2109242-21286Z0006")
 
 
 vcfsmerged$AF_x <- as.numeric(vcfsmerged$AF_x)
@@ -3326,72 +3361,33 @@ ggplot(vcfsmerged, aes(x = AF_x, y = AF_y)) +
     geom_smooth() +
     geom_abline() +
     annotation_custom(grob1) +
-  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF")
+  labs(x = "Sentieon 2.1.0 AF", y = "Sentieon 3.2.0 AF", title = "2109242-21286Z0006")
 ```
 
 
 
 
 ## Distribution of AF of unique variants across chromosome
+
 ```{python}
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
-cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
-
-# read vcf records into df
-vcf2_df = pd.read_csv(vcf2, sep="\t", comment='#', 
-                    names=cols, compression='infer')
-vcf3_df = pd.read_csv(vcf3, sep="\t", comment='#', 
-                    names=cols, compression='infer')
-                    
-# get count of chromosomes occurrences
-vcf2_df['AF'] = vcf2_df['SAMPLE'].str.split(':', expand=True)[2]
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
-
-## Get site to get common/unique variants
-vcf2_df['site'] = vcf2_df['CHROM'].astype(str) + ':' + vcf2_df['POS'].astype(str)
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
-
-# get common sites then get inverse to get unique
-def common_elements(list1, list2):
-    return list(set(list1) & set(list2))
-common_sites = common_elements(vcf3_df.site,vcf2_df.site)
-
-vcf3_df_unique = vcf3_df.loc[-vcf3_df['site'].isin(common_sites)]
+vcf3_df_unique = vcf3_df.loc[-vcf3_df['site_ref'].isin(common_sites)]
 print("All v3 variants:" + str(len(vcf3_df)))
 print("All unique v3 variants:" + str(len(vcf3_df_unique)))
-
-vcf2_df_unique = vcf2_df.loc[-vcf2_df['site'].isin(common_sites)]
+vcf2_df_unique = vcf2_df.loc[-vcf2_df['site_ref'].isin(common_sites)]
 print("All v2 variants:" + str(len(vcf2_df)))
 print("All unique v2 variants:" + str(len(vcf2_df_unique)))
-
 ```
 
 
 ```{r}
-dat <- py$vcf3_df_unique
+#v2
+dat <- py$vcf2_df_uniq
 dat$AF <- as.numeric(dat$AF)
-
-# remove mnps 
-nrow(dat[which(is.na(dat$AF)),])
-nrow(dat[complete.cases(dat), ])
-
-dat <- dat[complete.cases(dat), ]
-
-plot(density(dat$AF), main = "Unique v3 variants AF 2109242-21286Z0006")
-```
-
-```{r}
-dat <- py$vcf2_df_unique
-dat$AF <- as.numeric(dat$AF)
-
-# remove mnps 
-nrow(dat[which(is.na(dat$AF)),])
-nrow(dat[complete.cases(dat), ])
-
-dat <- dat[complete.cases(dat), ]
-
 plot(density(dat$AF), main = "Unique v2 variants AF 2109242-21286Z0006")
+#v3
+dat <- py$vcf3_df_uniq
+dat$AF <- as.numeric(dat$AF)
+plot(density(dat$AF), main = "Unique v3 variants AF 2109242-21286Z0006")
 ```
 
 
@@ -3408,14 +3404,17 @@ cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
 
 ```
 
-```{python}
-import pandas as pd
-import os
-cwd = os.getcwd()
-print(cwd)
 
-vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf'
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf'
+```{bash, engine.opts='-l'}
+#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted_goodAF.vcf
+#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted_goodAF.vcf
+```
+
+
+```{python}
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted_goodAF.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted_goodAF.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 
 # read vcf records into df
@@ -3425,54 +3424,28 @@ vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#',
                     names=cols, compression='infer')
 
 
-## Get depths at each pos for vcf sentieon v2
-vcf2_df['site'] = vcf2_df['CHROM'].astype(str) + ':' + vcf2_df['POS'].astype(str)
-vcf2_df['DP'] = vcf2_df['INFO'].str.split(';').apply(
-        lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf2_df['DP'] = vcf2_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-
-## Get depths at each pos for vcf sentieon v3
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
-vcf3_df['DP'] = vcf3_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf3_df['DP'] = vcf3_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-vcf2_df['AF'] = vcf2_df['SAMPLE'].str.split(':', expand=True)[2]
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
+vcf2_df = reformat_vcf(vcf2_df, 2)
+vcf3_df = reformat_vcf(vcf3_df, 3)
 
 #how many sites overlap between the two versions
 print("number of rows for vcf v2: " + str(len(vcf2_df))) #207,067
 print("number of rows for vcf v3: " + str(len(vcf3_df))) #443,904
 
-# Filter common sites between two vcfs
-def common_elements(list1, list2):
-    return list(set(list1) & set(list2))
 
-common_sites = common_elements(vcf2_df.site,vcf3_df.site)
+common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
 print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites))) # 196,147
 
-vcf2_df_common = vcf2_df.loc[vcf2_df['site'].isin(common_sites)]
-vcf3_df_common = vcf3_df.loc[vcf3_df['site'].isin(common_sites)]
-
-# rename DP in columns as we will merge soon 
-vcf3_df_common = vcf3_df_common.rename({'DP': 'DP_v3'}, axis=1)
-vcf2_df_common = vcf2_df_common.rename({'DP': 'DP_v2'}, axis=1)
+vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
 
 # save common snps
-vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site')
-vcfs_merged.to_csv('Merged_vcfs_common.tsv', sep="\t", index=False, header=True)
-
-#cfs_merged['DP_v3'].corr(vcfs_merged['DP_v2'])
-vcfs_merged['DP_v3'] = vcfs_merged['DP_v3'].astype(int)
-vcfs_merged['DP_v2'] = vcfs_merged['DP_v2'].astype(int)
+vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
 ```
 
 ```{python}
 ## plot venn diagram of shared variants and unique to each variant
-from matplotlib_venn import venn2, venn2_circles, venn2_unweighted
-from matplotlib_venn import venn3, venn3_circles
-from matplotlib import pyplot as plt
-
-vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site'].isin(common_sites)]
-vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site'].isin(common_sites)]
+vcf2_df_uniq = vcf2_df.loc[~vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_uniq = vcf3_df.loc[~vcf3_df['site_ref'].isin(common_sites)]
 
 print("uniq vcf v2:" + str(len(vcf2_df_uniq)))
 
@@ -3497,20 +3470,18 @@ vcf2_df_uniq
 vcf2_AF_uniq = vcf2_df_uniq
 
 # read in vcf3 all
-vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf'
 cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
 vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
                     names=cols, compression='infer')
-vcf3_df['site'] = vcf3_df['CHROM'].astype(str) + ':' + vcf3_df['POS'].astype(str)
-vcf3_df['DP'] = vcf3_df['INFO'].str.split(';').apply(lambda x: ''.join((y for y in x if y.startswith('DP='))))
-vcf3_df['DP'] = vcf3_df['DP'].str.replace('DP=', '') # only get the numbers from DP, remove DP=
-vcf3_df['AF'] = vcf3_df['SAMPLE'].str.split(':', expand=True)[2]
+
+vcf3_df = reformat_vcf(vcf3_df, 3)
 
 # filter the vcf3 for sites in vcf2_AF_uniq
-vcf3_withvcf2uniqAF = vcf3_df.loc[vcf3_df['site'].isin(vcf2_AF_uniq.site)]
+vcf3_withvcf2uniqAF = vcf3_df.loc[vcf3_df['site_ref'].isin(vcf2_AF_uniq.site_ref)]
 
-# there 25 variants carried over vcf3 with lower AF but there is 17 variants not called in sentieon v3. These are:
-lowvcf2uniqAF_droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site'].isin(vcf3_withvcf2uniqAF.site)]
+# filter for vcf2 that have sites dropped in vcf3
+vcf2_uniqv2droppedinv3 = vcf2_AF_uniq.loc[~vcf2_AF_uniq['site_ref'].isin(vcf3_withvcf2uniqAF.site_ref)]
 ```
 
 ```{r}
@@ -3519,9 +3490,9 @@ print(c("Number of variants that dropped below 3% AF in sentieon v3:   ", nrow(v
 vcf3_withvcf2uniqAF
 
 
-lowvcf2uniqAF_droppedinv3 <- py$lowvcf2uniqAF_droppedinv3
-print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(lowvcf2uniqAF_droppedinv3)))
-lowvcf2uniqAF_droppedinv3
+vcf2_uniqv2droppedinv3 <- py$vcf2_uniqv2droppedinv3
+print(c("Number of variants that dropped from sentieon v3 but previously had low AF in sentieon v2: ", nrow(vcf2_uniqv2droppedinv3)))
+vcf2_uniqv2droppedinv3
 ```
 
 
@@ -3623,6 +3594,137 @@ knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/n
 knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0/vcf_3.2.0/types-of-variants-on-each-chromosome-v3-2109242.col.png")
 ```
 
+
+## Compare true positives variants mutect2 AF to normal AF (alt / (ref + alt))
+
+
+```{python}
+vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf'
+vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf'
+cols = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"]
+# read vcf records into df
+vcf2_df = pd.read_csv(vcf2, sep="\t", comment='#', 
+                    names=cols, compression='infer')
+vcf3_df = pd.read_csv( vcf3, sep="\t", comment='#', 
+                    names=cols, compression='infer')
+vcf2_df = reformat_vcf(vcf2_df, 2)
+vcf3_df = reformat_vcf(vcf3_df, 3)
+# Filter common sites between two vcfs
+common_sites = common_elements(vcf2_df.site_ref,vcf3_df.site_ref)
+print("Number of Chrom:Pos sites shared between two vcfs: " + str(len(common_sites))) # 196,147
+vcf2_df_common = vcf2_df.loc[vcf2_df['site_ref'].isin(common_sites)]
+vcf3_df_common = vcf3_df.loc[vcf3_df['site_ref'].isin(common_sites)]
+# save common snps
+vcfs_merged = pd.merge(vcf2_df_common, vcf3_df_common, on='site_ref')
+```
+
+
+```{r}
+vcfsmerged <- py$vcfs_merged
+vcf2_df <- py$vcf2_df
+vcf3_df <- py$vcf3_df
+vcf3_withvcf2uniqAF_formatted <- py$vcf3_withvcf2uniqAF
+vcf2_withvcf2uniqAF_formatted <- py$vcf2_withvcf2uniqAF
+vcf2_uniqv2droppedinv3_formatted <- py$vcf2_uniqv2droppedinv3
+cols.num <- c("AF_v2", "AF_byreads_v2" , "AF_v3", "AF_byreads_v3" )
+vcfsmerged[cols.num] <- sapply(vcfsmerged[cols.num],as.numeric)
+cols.num <- c("AF_v2", "AF_byreads_v2")
+vcf2_df[cols.num] <- sapply(vcf2_df[cols.num],as.numeric)
+cols.num <- c("AF_v3", "AF_byreads_v3")
+vcf3_df[cols.num] <- sapply(vcf3_df[cols.num],as.numeric)
+cols.num <- c("AF_v3", "AF_byreads_v3" )
+vcf3_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf3_withvcf2uniqAF_formatted[cols.num],as.numeric)
+cols.num <- c("AF_v2", "AF_byreads_v2" )
+vcf2_withvcf2uniqAF_formatted[cols.num] <- sapply(vcf2_withvcf2uniqAF_formatted[cols.num],as.numeric)
+cols.num <- c("AF_v2", "AF_byreads_v2" )
+vcf2_uniqv2droppedinv3_formatted[cols.num] <- sapply(vcf2_uniqv2droppedinv3_formatted[cols.num],as.numeric)
+vcfmerged_lowvafinv3 <- vcfsmerged[which(vcfsmerged$site_ref %in% vcf3_withvcf2uniqAF_formatted$site_ref), ]
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_v2, vcfsmerged$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109242-21286Z0006")
+
+ggplot(vcfsmerged, aes(x = AF_v2, y = AF_v3)) +
+    geom_point() +
+    geom_point(data=vcfmerged_lowvafinv3, aes(x=AF_v2, y=AF_v3), colour="red") +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+  labs(x = "Mutect2 AF v2", y = "Mutect2 AF v3", title = "2109242-21286Z0006")
+## mutect2 AF vs raw AF vcf v2
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf2_df$AF_byreads_v2, vcf2_df$AF_v2,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
+    geom_point() +
+    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) + 
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109242-21286Z0006")
+
+ggplot(vcf2_df, aes(x = AF_byreads_v2, y = AF_v2)) +
+    geom_point() +
+    geom_point(data=vcf2_withvcf2uniqAF_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="blue") +
+    geom_point(data=vcf2_uniqv2droppedinv3_formatted, aes(x=AF_byreads_v2, y=AF_v2), colour="red") +
+    geom_smooth() +
+    geom_abline() +
+    geom_hline(yintercept=3, linetype="dashed", color = "black") +
+    geom_vline(xintercept=3, linetype="dashed", color = "black") +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v2.1.0 2109242-21286Z0006") +
+    scale_x_continuous(limits = c(0, 25))+
+    scale_y_continuous(limits = c(0, 25))
+
+## mutect2 AF vs raw AF vcf v3
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcf3_df$AF_byreads_v3, vcf3_df$AF_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109242-21286Z0006")
+
+ggplot(vcf3_df, aes(x = AF_byreads_v3, y = AF_v3)) +
+    geom_point() +
+      geom_point(data=vcf3_withvcf2uniqAF_formatted, aes(x=AF_byreads_v3, y=AF_v3), colour="blue") +
+    geom_smooth() +
+    geom_abline() + 
+    geom_hline(yintercept=3, linetype="dashed", color = "black") +
+    geom_vline(xintercept=3, linetype="dashed", color = "black") +
+    labs(x = "Raw AF", y = "Mutect2 AF", title = "Sentieon v3.2.0 2109242-21286Z0006")+
+    scale_x_continuous(limits = c(0, 25))+
+    scale_y_continuous(limits = c(0, 25))
+
+## raw AF vcf v2 vs raw AF vcf v3
+grob1 = grobTree(textGrob(paste("Pearson Corr: ", round(cor(vcfsmerged$AF_byreads_v2, vcfsmerged$AF_byreads_v3,use = "complete.obs"), 4) ), x = 0.63, y = 0.97, hjust = 0, gp = gpar(col = "red", fontsize = 11, fontface = "bold")))
+ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    annotation_custom(grob1) +
+  labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "2109242-21286Z0006")
+
+ggplot(vcfsmerged, aes(x = AF_byreads_v2, y = AF_byreads_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    geom_hline(yintercept=3, linetype="dashed", color = "black") +
+    geom_vline(xintercept=3, linetype="dashed", color = "black") +
+    labs(x = "Raw AF sentieon v2", y = "Raw AF sentieon v3", title = "2109242-21286Z0006") +
+    scale_x_continuous(limits = c(0, 25))+
+    scale_y_continuous(limits = c(0, 25))
+
+## Plot the DPs of the 
+vcfsmerged$DP_v2<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v2)))
+vcfsmerged$DP_v3<-as.numeric(gsub("DP=","",as.character(vcfsmerged$DP_v3)))
+ggplot(vcfsmerged, aes(x = DP_v2, y = DP_v3)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    labs(x = "DP sentieon v2", y = "DP sentieon v3", title = "2109242-21286Z0006") 
+```
 
 
 
