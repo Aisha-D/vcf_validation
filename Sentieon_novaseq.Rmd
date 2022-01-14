@@ -188,20 +188,6 @@ cd /home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/vcf_validation
 
 We will check two samples TMv2OCT20-oncospan-cell-line-1st_S39_L001 and TMv2OCT20-oncospan-cell-line-2nd_S40_L001
 
-```{bash}
-
-# bcftools='/home/aisha/Softwares/bin/bcftools'
-# cd ..
-
-#bcftools norm -f ../../../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo.vcf -o  vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted.vcf 
-
-# version 2 has column incompatible for left align when normalising multi allelic variants
-# scp vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo.vcf vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_copy.vcf
-# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted.vcf
-
-```
-
-
 ## Read depth of shared sites
 
 ```{r , echo=FALSE}
@@ -305,16 +291,6 @@ plot(density(dat$AF), main = "Unique v3 variants AF oncospan")
 
 ## Compare vcfs with AF >= 3%
 
-
-```{bash, engine.opts='-l'}
-
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted_goodAF.vcf
-
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted_goodAF.vcf'
@@ -499,12 +475,6 @@ knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/n
 
 ## Compare true positives variants mutect2 AF to normal AF (alt / (ref + alt))
 
-```{bash}
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bedtools intersect -a vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_goodAF.vcf -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_goodAF.vcf -header -v | bedtools intersect -a - -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz -v > TMv2OCT20-oncospan-cell-line-1st_S39_L001_variantsinv2droppedinv3.vcf
-
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_splitted.vcf'
@@ -793,20 +763,6 @@ joined_df
 
 We will check sample TMv2OCT20-oncospan-cell-line-2nd_S40_L001
 
-```{bash}
-
-#bcftools='/home/aisha/Softwares/bin/bcftools'
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#$bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo.vcf -o  #vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_splitted.vcf 
-
-# version 2 has column headers incompatible for left align when normalising multi allelic variants
-
-#scp vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo.vcf vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_copy.vcf
-#sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | $bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_splitted.vcf
-
-pwd
-```
 
 ## Read depth of shared sites
 
@@ -917,27 +873,6 @@ plot(density(dat$AF), main = "Unique v3 variants AF oncospan_2nd")
 
 ## Compare vcfs with AF >= 3%
 
-
-```{bash}
-
-cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo.vcf > vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo.vcf > vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_goodAF.vcf
-
-
-```
-
-```{bash, engine.opts='-l'}
-
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_splitted_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_splitted_goodAF.vcf
-
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_splitted_goodAF.vcf'
@@ -1264,12 +1199,6 @@ v2_v3_df2
 
 ## Compare true positives variants mutect2 AF to normal AF (alt / (ref + alt))
 
-```{bash}
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq
-
-#bedtools intersect -a vcf_2.1.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_goodAF.vcf -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_filteredmyeo_goodAF.vcf -header -v | bedtools intersect -a - -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-2nd_S40_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz -v > TMv2OCT20-oncospan-cell-line-2nd_S40_L001_variantsinv2droppedinv3.vcf
-
-```
 
 
 ```{python}
@@ -1459,18 +1388,6 @@ joined_df
 
 We will check sample TMv2OCT20-HD734-1st_S35_L001
 
-```{bash}
-
-# bcftools='/home/aisha/Softwares/bin/bcftools'
-# cd ..
-
-#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf -o  vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf 
-
-# version 2 has column incompatible for left align when normalising multi allelic variants
-# scp vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_copy.vcf
-# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf
-
-```
 
 ## Read depth of shared sites
 
@@ -1602,22 +1519,6 @@ plot(density(dat$AF), main = "Unique v3 variants AF HD734")
 
 ## Compare vcfs with AF >= 3%
 
-
-```{bash}
-bcftools='/home/aisha/Softwares/bin/bcftools'
-cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf > vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo.vcf > vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf
-
-```
-
-```{bash, engine.opts='-l'}
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted_goodAF.vcf
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted_goodAF.vcf
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted_goodAF.vcf'
@@ -1897,13 +1798,6 @@ ggscatter(HD734_var, x = "vcf2_AF", y = "vcf3_AF",
 
 ## Compare true positives variants mutect2 AF to normal AF (alt / (ref + alt))
 
-```{bash}
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bedtools intersect -a vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf -b vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf -header -v | bedtools intersect -a - -b vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz -v > TMv2OCT20-HD734-1st_S35_L001_variantsinv2droppedinv3.vcf
-
-```
-
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
 vcf3 = 'novaseq/bam_2.1.0/vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_splitted.vcf'
@@ -2109,67 +2003,11 @@ point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # HD829 Sample
 
 We will check sample  TMv2OCT20-HD829-1st_S33_L001
 
-```{bash}
 
-# bcftools='/home/aisha/Softwares/bin/bcftools'
-# cd ..
-
-#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf -o  vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf 
-
-# version 2 has column incompatible for left align when normalising multi allelic variants
-# scp vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_copy.vcf
-# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf
-
-```
 ## Read depth of shared sites
 
 ```{python}
@@ -2295,29 +2133,6 @@ plot(density(dat$AF), main = "Unique v3 variants AF HD829")
 
 
 ## Compare vcfs with AF >= 3%
-
-
-```{bash}
-#bcftools='/home/aisha/Softwares/bin/bcftools'
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf > vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo.vcf > vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_goodAF.vcf
-
-
-```
-
-```{bash}
-#bcftools='/home/aisha/Softwares/bin/bcftools'
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted_goodAF.vcf
-
-
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted_goodAF.vcf'
@@ -2596,12 +2411,6 @@ ggscatter(HD829_var, x = "vcf2_AF", y = "vcf3_AF",
 
 ## Compare true positives variants mutect2 AF to normal AF (alt / (ref + alt))
 
-```{bash}
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bedtools intersect -a vcf_2.1.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf -b vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_filteredmyeo_goodAF.vcf -header -v | bedtools intersect -a - -b vcf_3.2.0/TMv2OCT20-HD734-1st_S35_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz -v > TMv2OCT20-HD734-1st_S35_L001_variantsinv2droppedinv3.vcf
-
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/TMv2OCT20-HD829-1st_S33_L001_filteredmyeo_splitted.vcf'
@@ -2684,56 +2493,9 @@ point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Clinical sample 1: 2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001
 
-```{bash}
 
-# bcftools='/home/aisha/Softwares/bin/bcftools'
-# cd ..
-
-#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf -o  vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf
-
-# version 2 has column incompatible for left align when normalising multi allelic variants
-# scp vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_copy.vcf
-# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf
-
-```
 
 ## Read depth of shared sites
 
@@ -2849,7 +2611,6 @@ print("All unique v2 variants:" + str(len(vcf2_df_unique)))
 
 
 ```{r}
-
 #v2
 dat <- py$vcf2_df_uniq
 dat$AF <- as.numeric(dat$AF)
@@ -2864,23 +2625,7 @@ dat$AF <- as.numeric(dat$AF)
 
 ```
 
-
 ## Compare vcfs with AF >= 3%
-
-
-```{bash}
-
-cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf > vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo.vcf > vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted_goodAF.vcf
-
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted_goodAF.vcf'
@@ -3071,10 +2816,6 @@ knitr::include_graphics("/home/aisha/Documents/Projects/myeloid/1.9.0/sentieon/n
 
 ## Compare true positives variants mutect2 AF to normal AF (alt / (ref + alt))
 
-```{bash}
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-#bedtools intersect -a vcf_2.1.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_goodAF.vcf -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_filteredmyeo_goodAF.vcf -header -v | bedtools intersect -a - -b vcf_3.2.0/TMv2OCT20-oncospan-cell-line-1st_S39_L001_markdup_recalibrated_tnhaplotyper2.vcf.gz -v > TMv2OCT20-oncospan-cell-line-1st_S39_L001_variantsinv2droppedinv3.vcf
-```
 
 ```{python}
 vcf2 = 'novaseq/bam_2.1.0/vcf_2.1.0/2109024-21286Z0006-BM-MPD-MYE-M-EGG2_S4_L001_filteredmyeo_splitted.vcf'
@@ -3154,21 +2895,6 @@ point_graph(vcfsmerged, x = "DP_v2", y = "DP_v3", title = sample_name, x_label =
 
 
 # Clinical sample 1: 2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001-EGG2_S4_L001
-
-
-```{bash}
-
-# bcftools='/home/aisha/Softwares/bin/bcftools'
-# cd ..
-
-#bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD  vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf -o  vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf
-
-# version 2 has column incompatible for left align when normalising multi allelic variants
-# scp vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_copy.vcf
-# sed 's/AD,Number=./AD,Number=R/g'  vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_copy.vcf | sed 's/RPA,Number=./RPA,Number=R/g'  | bcftools norm -f ../../../../../references/GRCh38.no_alt_analysis_set_chr_mask21.fa.gz -m -any --keep-sum AD -  -o vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf
-
-```
-
 
 ## Read depth of shared sites
 
@@ -3278,24 +3004,6 @@ plot(density(dat$AF), main = "Unique v3 variants AF 2109242")
 
 
 ## Compare vcfs with AF >= 3%
-
-
-```{bash}
-
-cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf > vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf
-
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo.vcf > vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_goodAF.vcf
-
-```
-
-
-```{bash, engine.opts='-l'}
-#cd ~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/bam_2.1.0
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf > vcf_2.1.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted_goodAF.vcf
-#bcftools view -i "FORMAT/AF[*]>0.03" vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted.vcf > vcf_3.2.0/2109242-21294Z0042-BM-MPD-MYE-F-EGG2_S12_L001_filteredmyeo_splitted_goodAF.vcf
-```
 
 
 ```{python}
@@ -3596,6 +3304,94 @@ for(sample in 1:4) { #up to 4 samples
   }
 }
 
-dat
+View(dat)
 ```
+
+
+```{r}
+library(tidyr)
+mydir = "~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/qualimap_bam2.1.0/"
+total_files =  list.files(path = paste0(mydir), pattern= ("*.txt"))
+
+summary_df  <- as.data.frame(matrix(ncol = length(total_files), nrow = 58))
+summary_df_v2 <- as.data.frame(matrix(ncol = 1, nrow = 37))
+rownames <- c()
+for(sample in 1:length(total_files)) { #up to 4 samples
+  print(sample)
+  file = list.files(path = paste0(mydir), pattern= ("*.txt"))[sample]
+  print(file)
+  dat <- as.data.frame(readLines(paste0(mydir, file)))
+  # split the fourth line that contains the input file by / then change vector and select the last element which is the sample name. This will be the rowname for this file
+  sample_name <-  tail(unlist(strsplit(dat[6,], "/")),1)
+  colnames(summary_df)[sample] <- sample_name
+  summary_df[,sample] <- dat[c(16:73),]
+  #remove NA's or blank rows
+  summary_df2 <- summary_df[!apply(is.na(summary_df) | summary_df == "", 1, all),]
+  summary_df3 <- summary_df2 %>% 
+   separate(sample_name, c("headers", sample_name), sep = "=")
+  row_names <- summary_df3[,"headers"]
+  summary_df_v2 <- as.data.frame(cbind(summary_df_v2, summary_df3[,sample_name]))
+  colnames(summary_df_v2)[sample+1] <- sample_name
+}
+
+rownames(summary_df_v2) <- row_names
+summary_df_v2 <- summary_df_v2[,-1]
+# remove bam and replace with v2
+colnames(summary_df_v2) <-paste0(unlist(strsplit(colnames(summary_df_v2), ".bam")), "_v2")
+```
+
+```{r}
+mydir = "~/Documents/Projects/myeloid/1.9.0/sentieon/novaseq/qualimap_bam3.2.0/"
+total_files =  list.files(path = paste0(mydir), pattern= ("*.txt"))
+
+summary_df  <- as.data.frame(matrix(ncol = length(total_files), nrow = 58))
+summary_df_v3<- as.data.frame(matrix(ncol = 1, nrow = 37))
+rownames <- c()
+for(sample in 1:length(total_files)) { #up to 4 samples
+  print(sample)
+  file = list.files(path = paste0(mydir), pattern= ("*.txt"))[sample]
+  print(file)
+  dat <- as.data.frame(readLines(paste0(mydir, file)))
+  # split the fourth line that contains the input file by / then change vector and select the last element which is the sample name. This will be the rowname for this file
+  sample_name <-  tail(unlist(strsplit(dat[6,], "/")),1)
+  colnames(summary_df)[sample] <- sample_name
+  summary_df[,sample] <- dat[c(16:73),]
+  #remove NA's or blank rows
+  summary_df2 <- summary_df[!apply(is.na(summary_df) | summary_df == "", 1, all),]
+  summary_df3 <- summary_df2 %>% 
+   separate(sample_name, c("headers", sample_name), sep = "=")
+  row_names <- summary_df3[,"headers"]
+  summary_df_v3 <- as.data.frame(cbind(summary_df_v3, summary_df3[,sample_name]))
+  colnames(summary_df_v3)[sample+1] <- sample_name
+}
+
+rownames(summary_df_v3) <- row_names
+summary_df_v3 <- summary_df_v3[,-1]
+# remove bam and replace with v2
+colnames(summary_df_v3) <-paste0(unlist(strsplit(colnames(summary_df_v3), ".bam")), "_v3")
+```
+
+```{r}
+# Now we bind and comapre the alignment of v2 and v3 :)
+
+bam_df_v2_v3 <- cbind(summary_df_v2, summary_df_v3)
+bam_df_v2_v3 <- bam_df_v2_v3[,order(colnames(bam_df_v2_v3))]
+
+# write.table(bam_df_v2_v3, "novaseq/qualimap_results.tsv", sep = "\t", quote = F, row.names = rownames(bam_df_v2_v3))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
